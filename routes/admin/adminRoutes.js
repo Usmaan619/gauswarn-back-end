@@ -26,6 +26,9 @@ const contactControllerGauswarn = require("../../controllers/users/gauswarn/cont
 const imageUploadControllerGauswarn = require("../../controllers/users/gauswarn/uploadController");
 
 
+const homeBannerControllerGauswarn = require("../../controllers/users/gauswarn/homeBannerController");
+
+
 
 const upload = require("../../middlewares/multer");
 
@@ -117,6 +120,15 @@ router.post("/files", upload.array("files"), imageUploadControllerGauswarn.uploa
 router.post("/add-images", upload.array("images", 10), productControllerGauswarn.addProductImages);
 
 router.post("/replace-image", upload.single("image"), productControllerGauswarn.replaceProductImage);
+
+
+
+// GET all 4 banners
+router.get("/home-banners", homeBannerControllerGauswarn.getHomeBanners);
+// POST all 4 banners
+router.post("/home-banners-images", upload.array("banner", 4), homeBannerControllerGauswarn.updateHomeBanner);
+
+
 
 
 // Contact (auth-protected)
