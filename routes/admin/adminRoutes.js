@@ -29,6 +29,9 @@ const imageUploadControllerGauswarn = require("../../controllers/users/gauswarn/
 const homeBannerControllerGauswarn = require("../../controllers/users/gauswarn/homeBannerController");
 
 
+const reelControllerGauswarn = require("../../controllers/users/gauswarn/reelController");
+
+
 
 const upload = require("../../middlewares/multer");
 
@@ -129,6 +132,33 @@ router.get("/home-banners", homeBannerControllerGauswarn.getHomeBanners);
 router.post("/home-banners-images", upload.array("banner", 4), homeBannerControllerGauswarn.updateHomeBanner);
 
 
+// upload reels
+
+
+router.get("/reels/all", reelControllerGauswarn.getAllReelsList);
+
+router.post(
+  "/upload-reel",
+  upload.fields([{ name: "video", maxCount: 1 }, { name: "thumbnail", maxCount: 1 }]),
+  reelControllerGauswarn.uploadReel
+);
+
+router.post(
+  "/upload-multiple-reels",
+  upload.fields([
+    { name: "reels", maxCount: 10 },
+    { name: "thumbs", maxCount: 10 },
+  ]),
+  reelControllerGauswarn.uploadMultipleReels
+);
+
+router.delete("/reels/:id", reelControllerGauswarn.deleteReelById);
+
+router.post(
+  "/update/:id",
+  upload.fields([{ name: "video", maxCount: 1 }, { name: "thumbnail", maxCount: 1 }]),
+  reelControllerGauswarn.updateReel
+);
 
 
 // Contact (auth-protected)
