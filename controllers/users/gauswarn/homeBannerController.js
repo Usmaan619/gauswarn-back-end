@@ -2,6 +2,7 @@ const {
   getAllBanners,
   getBannerSlot,
   updateBannerSlot,
+  ensureHomeBannerRow,
 } = require("../../../model/users/gauswarn/homeBannerModel");
 
 const {
@@ -12,6 +13,7 @@ const {
 // GET all banners
 exports.getHomeBanners = async (req, res) => {
   try {
+    await ensureHomeBannerRow();
     const banners = await getAllBanners();
     return res.json(banners);
   } catch (err) {
@@ -19,65 +21,65 @@ exports.getHomeBanners = async (req, res) => {
   }
 };
 
-exports.updateHomeBanner = async (req, res) => {
-  try {
-    const { slots } = req.body; // slot = "1,2,4"
-    const files = req.files || []; // multiple files
+// exports.updateHomeBanner = async (req, res) => {
+//   try {
+//     const { slots } = req.body; // slot = "1,2,4"
+//     const files = req.files || []; // multiple files
 
-    if (!slots) {
-      return res.status(400).json({ message: "Slots are required" });
-    }
+//     if (!slots) {
+//       return res.status(400).json({ message: "Slots are required" });
+//     }
 
-    const slotArray = slots.split(",").map((s) => Number(s.trim()));
+//     const slotArray = slots.split(",").map((s) => Number(s.trim()));
 
-    // Validate slots (1–4)
-    if (slotArray.some((s) => ![1, 2, 3, 4].includes(s))) {
-      return res
-        .status(400)
-        .json({ message: "Invalid slot number (1-4 allowed)" });
-    }
+//     // Validate slots (1–4)
+//     if (slotArray.some((s) => ![1, 2, 3, 4].includes(s))) {
+//       return res
+//         .status(400)
+//         .json({ message: "Invalid slot number (1-4 allowed)" });
+//     }
 
-    // If no images → return but not error
-    if (files.length === 0) {
-      return res.json({
-        message: "No images uploaded. No banners updated.",
-        updated: [],
-      });
-    }
+//     // If no images → return but not error
+//     if (files.length === 0) {
+//       return res.json({
+//         message: "No images uploaded. No banners updated.",
+//         updated: [],
+//       });
+//     }
 
-    let updated = [];
+//     let updated = [];
 
-    // Loop images and update their slots
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const slot = slotArray[i];
+//     // Loop images and update their slots
+//     for (let i = 0; i < files.length; i++) {
+//       const file = files[i];
+//       const slot = slotArray[i];
 
-      if (!slot) continue; // slot kam hai → extra file ignore
+//       if (!slot) continue; // slot kam hai → extra file ignore
 
-      const oldBanner = await getBannerSlot(slot);
+//       const oldBanner = await getBannerSlot(slot);
 
-      // Upload new
-      const newUrl = await uploadBufferToS3(file.buffer, file.mimetype);
+//       // Upload new
+//       const newUrl = await uploadBufferToS3(file.buffer, file.mimetype);
 
-      // Delete old from S3
-      if (oldBanner) {
-        await deleteFromS3(oldBanner);
-      }
+//       // Delete old from S3
+//       if (oldBanner) {
+//         await deleteFromS3(oldBanner);
+//       }
 
-      // Update DB
-      await updateBannerSlot(slot, newUrl);
+//       // Update DB
+//       await updateBannerSlot(slot, newUrl);
 
-      updated.push({ slot, newUrl });
-    }
+//       updated.push({ slot, newUrl });
+//     }
 
-    return res.json({
-      message: "Banners updated successfully",
-      updated,
-    });
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-};
+//     return res.json({
+//       message: "Banners updated successfully",
+//       updated,
+//     });
+//   } catch (error) {
+//     return res.status(500).json({ message: error.message });
+//   }
+// };
 
 // exports.updateHomeBannerNew = async (req, res) => {
 //   try {
@@ -137,3 +139,44 @@ exports.updateHomeBanner = async (req, res) => {
 //     return res.status(500).json({ message: err.message });
 //   }
 // };
+exports.updateHomeBanner = async (req, res) => {
+  try {
+    const slot = Number(req.body.slots); // convert to number
+    const file = req.file;
+
+    await ensureHomeBannerRow();
+    if (!slot) {
+      return res.status(400).json({ message: "Slot is required" });
+    }
+
+    if (![1, 2, 3, 4].includes(slot)) {
+      return res.status(400).json({ message: "Invalid slot number" });
+    }
+
+    if (!file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    // Get old banner
+    const oldBanner = await getBannerSlot(slot);
+
+    // Upload new file
+    const newUrl = await uploadBufferToS3(file.buffer, file.mimetype);
+
+    // Delete old S3 file
+    if (oldBanner) {
+      await deleteFromS3(oldBanner);
+    }
+
+    // Update DB
+    await updateBannerSlot(slot, newUrl);
+
+    return res.json({
+      updated: true,
+      slot,
+      newUrl,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};

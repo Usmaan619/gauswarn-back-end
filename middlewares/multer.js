@@ -1,5 +1,10 @@
 const multer = require("multer");
 
-const storage = multer.memoryStorage(); // Important for buffer upload
+const storage = multer.memoryStorage();
 
-module.exports = multer({ storage });
+const upload = multer({
+  storage,
+  limits: { fieldSize: 100 * 1024 * 1024 }, // 25 MB text fields
+});
+
+module.exports = upload;

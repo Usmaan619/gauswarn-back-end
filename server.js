@@ -19,8 +19,11 @@ const { connectToDatabase } = require("./config/dbConnection");
 
 // Middlewares
 app.use(cors());
-app.use(bodyParser.json({ limit: "700mb" }));
-app.use(bodyParser.urlencoded({ limit: "700mb", extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+// app.use(bodyParser.json({ limit: "700mb" }));
+
+// app.use(bodyParser.urlencoded({ limit: "700mb", extended: true }));
 
 // Allow specific origins or all origins
 app.use(

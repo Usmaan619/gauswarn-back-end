@@ -7,7 +7,7 @@ const {
   deleteAllReels,
 } = require("../../../model/users/gauswarn/reelModel");
 const {
-  uploadBufferToS3,
+  uploadBufferAndReelsToS3,
   deleteFromS3,
 } = require("../../../service/uploadFile");
 
@@ -30,13 +30,16 @@ exports.uploadReel = async (req, res) => {
     }
     await deleteAllReels();
 
-    const videoUrl = await uploadBufferToS3(
+    const videoUrl = await uploadBufferAndReelsToS3(
       videoFile.buffer,
       videoFile.mimetype
     );
     let thumbUrl = null;
     if (thumbFile) {
-      thumbUrl = await uploadBufferToS3(thumbFile.buffer, thumbFile.mimetype);
+      thumbUrl = await uploadBufferAndReelsToS3(
+        thumbFile.buffer,
+        thumbFile.mimetype
+      );
     }
 
     const reelId = await addReel(
@@ -138,11 +141,11 @@ exports.deleteReelById = async (req, res) => {
 
 //         const oldReel = existingReels.find((r) => r.id == reelId);
 
-//         const videoUrl = await uploadBufferToS3(file.buffer, file.mimetype);
+//         const videoUrl = await uploadBufferAndReelsToS3(file.buffer, file.mimetype);
 
 //         let thumbUrl = null;
 //         if (thumbFiles[fileIndex]) {
-//           thumbUrl = await uploadBufferToS3(
+//           thumbUrl = await uploadBufferAndReelsToS3(
 //             thumbFiles[fileIndex].buffer,
 //             thumbFiles[fileIndex].mimetype
 //           );
@@ -222,9 +225,7 @@ exports.uploadMultipleReels = async (req, res) => {
     types = Array.isArray(types) ? types : [types];
     ids = Array.isArray(ids) ? ids : [ids];
     titles = Array.isArray(titles) ? titles : [titles];
-    descriptions = Array.isArray(descriptions)
-      ? descriptions
-      : [descriptions];
+    descriptions = Array.isArray(descriptions) ? descriptions : [descriptions];
     order = Array.isArray(order) ? order : [order];
 
     const existingReels = await getAllReels();
@@ -251,7 +252,10 @@ exports.uploadMultipleReels = async (req, res) => {
         );
 
         // ---- Video upload ----
-        const videoUrl = await uploadBufferToS3(file.buffer, file.mimetype);
+        const videoUrl = await uploadBufferAndReelsToS3(
+          file.buffer,
+          file.mimetype
+        );
 
         // ---- Thumbnail upload (optional) ----
         let thumbUrl = existing?.thumb_url || null;
@@ -260,7 +264,7 @@ exports.uploadMultipleReels = async (req, res) => {
             await deleteFromS3(existing.thumb_url);
           }
 
-          thumbUrl = await uploadBufferToS3(
+          thumbUrl = await uploadBufferAndReelsToS3(
             thumbFiles[fileIndex].buffer,
             thumbFiles[fileIndex].mimetype
           );
@@ -326,7 +330,6 @@ exports.uploadMultipleReels = async (req, res) => {
   }
 };
 
-
 /**
  * // FIXED: Properly handle multiple reels with id field (new + existing)
 exports.uploadMultipleReels = async (req, res) => {
@@ -369,7 +372,7 @@ exports.uploadMultipleReels = async (req, res) => {
         );
 
         // ---- Video upload ----
-        const videoUrl = await uploadBufferToS3(file.buffer, file.mimetype);
+        const videoUrl = await uploadBufferAndReelsToS3(file.buffer, file.mimetype);
 
         // ---- Thumbnail upload (optional) ----
         let thumbUrl = existing?.thumb_url || null;
@@ -378,7 +381,7 @@ exports.uploadMultipleReels = async (req, res) => {
             await deleteFromS3(existing.thumb_url);
           }
 
-          thumbUrl = await uploadBufferToS3(
+          thumbUrl = await uploadBufferAndReelsToS3(
             thumbFiles[fileIndex].buffer,
             thumbFiles[fileIndex].mimetype
           );
@@ -445,7 +448,7 @@ exports.uploadMultipleReels = async (req, res) => {
 };
 
  * 
- * */ 
+ * */
 
 exports.updateReel = async (req, res) => {
   try {
@@ -465,13 +468,13 @@ exports.updateReel = async (req, res) => {
     if (req.files?.video?.[0]) {
       if (reel.video_url) await deleteFromS3(reel.video_url);
       const video = req.files.video[0];
-      videoUrl = await uploadBufferToS3(video.buffer, video.mimetype);
+      videoUrl = await uploadBufferAndReelsToS3(video.buffer, video.mimetype);
     }
 
     if (req.files?.thumbnail?.[0]) {
       if (reel.thumb_url) await deleteFromS3(reel.thumb_url);
       const thumb = req.files.thumbnail[0];
-      thumbUrl = await uploadBufferToS3(thumb.buffer, thumb.mimetype);
+      thumbUrl = await uploadBufferAndReelsToS3(thumb.buffer, thumb.mimetype);
     }
 
     await updateReelDB(id, {

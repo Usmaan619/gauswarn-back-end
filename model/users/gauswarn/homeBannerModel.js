@@ -64,3 +64,21 @@ exports.getBannerSlot = async (slot) => {
     throw new Error(error.message);
   }
 };
+
+exports.ensureHomeBannerRow = async () => {
+  try {
+    return await withConnection(async (connection) => {
+      const [rows] = await connection.execute(
+        "SELECT COUNT(*) AS total FROM gauswarn_home_banners WHERE id = 1"
+      );
+
+      if (rows[0].total === 0) {
+        await connection.execute(
+          "INSERT INTO gauswarn_home_banners (id, banner1, banner2, banner3, banner4) VALUES (1, NULL, NULL, NULL, NULL)"
+        );
+      }
+    });
+  } catch (err) {
+    console.log("ensureHomeBannerRow error:", err);
+  }
+};

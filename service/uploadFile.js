@@ -112,3 +112,37 @@ exports.uploadMultipleBuffersToS3 = async (files) => {
 
   return await Promise.all(uploadPromises);
 };
+
+// -------------------- FILE /  REELS  /  BUFFER UPLOAD --------------------
+exports.uploadBufferAndReelsToS3 = async (buffer, mimetype) => {
+  const Key = `reels/${uuid()}.${mimetype.split("/")[1]}`;
+
+  const params = {
+    Bucket: process.env.AWS_BUCKET_NAME,
+    Key,
+    Body: buffer,
+    ContentType: mimetype,
+    // ACL: "public-read",
+  };
+
+  await s3.send(new PutObjectCommand(params));
+
+  return `https://${process.env.AWS_BUCKET_NAME}.s3.amazonaws.com/${Key}`;
+};
+
+// -------------------- FILE / BLOGS /BUFFER UPLOAD --------------------
+exports.uploadBufferAndBlogsToS3 = async (buffer, mimetype) => {
+  const Key = `blogs/${uuid()}.${mimetype.split("/")[1]}`;
+
+  const params = {
+    Bucket: process.env.AWS_BUCKET_NAME,
+    Key,
+    Body: buffer,
+    ContentType: mimetype,
+    // ACL: "public-read",
+  };
+
+  await s3.send(new PutObjectCommand(params));
+
+  return `https://${process.env.AWS_BUCKET_NAME}.s3.amazonaws.com/${Key}`;
+};

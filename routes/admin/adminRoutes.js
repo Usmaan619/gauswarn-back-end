@@ -25,16 +25,13 @@ const feedbackGauswarnController = require("../../controllers/users/gauswarn/fee
 const contactControllerGauswarn = require("../../controllers/users/gauswarn/contactController");
 const imageUploadControllerGauswarn = require("../../controllers/users/gauswarn/uploadController");
 
-
 const homeBannerControllerGauswarn = require("../../controllers/users/gauswarn/homeBannerController");
-
 
 const reelControllerGauswarn = require("../../controllers/users/gauswarn/reelController");
 
-
+const blogsControllerGauswarn = require("../../controllers/users/gauswarn/blogController");
 
 const upload = require("../../middlewares/multer");
-
 
 // ----------------------------
 // Admin Routes
@@ -46,28 +43,50 @@ router.post("/reset", forgotPasswordController.passwordReset);
 router.post("/verifyOtp", forgotPasswordController.verifyOtp);
 
 router.get("/me", authMiddleware, registerController.meAPI);
-router.get("/getAllCustomer", authMiddleware, userInfoController.getAllUserInfo);
-router.get("/getAllOrderDetails", authMiddleware, userInfoController.getAllOrderDetails);
-router.post("/getAllSales", authMiddleware, monthlyReportController.getAllSales);
+router.get(
+  "/getAllCustomer",
+  authMiddleware,
+  userInfoController.getAllUserInfo
+);
+router.get(
+  "/getAllOrderDetails",
+  authMiddleware,
+  userInfoController.getAllOrderDetails
+);
+router.post(
+  "/getAllSales",
+  authMiddleware,
+  monthlyReportController.getAllSales
+);
 
-router.post("/getAllSalesRajlaxmi", monthlyReportController.getAllSalesRajlaxmi);
-
+router.post(
+  "/getAllSalesRajlaxmi",
+  monthlyReportController.getAllSalesRajlaxmi
+);
 
 // ----------------------------
 // Rajlaxmi Routes
 // ----------------------------
 
 // Cutomers
-router.get("/getAllCutomerRajlaxmi",  registerController.getAllUsers);
-
+router.get("/getAllCutomerRajlaxmi", registerController.getAllUsers);
 
 // Products
 router.post("/createProductRajlaxmi", productControllerRajlaxmi.addProduct);
 router.post("/updateProductById", productControllerRajlaxmi.updateProduct);
-router.post("/deleteProductRajlaxmiById/:product_id", productControllerRajlaxmi.deleteProduct);
-router.get("/getAllProductsWithFeedback", productControllerRajlaxmi.getAllProductsWithFeedback);
+router.post(
+  "/deleteProductRajlaxmiById/:product_id",
+  productControllerRajlaxmi.deleteProduct
+);
+router.get(
+  "/getAllProductsWithFeedback",
+  productControllerRajlaxmi.getAllProductsWithFeedback
+);
 router.get("/getAllProductsRajlaxmi", productControllerRajlaxmi.getAllProducts);
-router.delete("/deleteProductsRajlaxmiById/:product_id", productControllerRajlaxmi.deleteProduct);
+router.delete(
+  "/deleteProductsRajlaxmiById/:product_id",
+  productControllerRajlaxmi.deleteProduct
+);
 
 // orders
 router.post("/createOrderRajlaxmi", orderControllerRajlaxmi.createOrder);
@@ -75,71 +94,130 @@ router.post("/updateRajlaxmiOrderById", orderControllerRajlaxmi.updateOrder);
 router.post("/deleteRajlaxmiOrderById", orderControllerRajlaxmi.deleteOrder);
 router.get("/rajlaxmiGetAllOrder", orderControllerRajlaxmi.getAllOrders);
 
-
 // Feedback
 router.post("/createFeedbackRajlaxmi", feedbackRajlaxmiController.createReview);
 router.get("/getAllFeedbackRajlaxmi", feedbackRajlaxmiController.getAllReviews);
-router.get("/getSingleFeedbackRajlaxmiById/:id", feedbackRajlaxmiController.getReviewById);
-router.put("/updateFeedbackRajlaxmiById/:id", feedbackRajlaxmiController.updateReview);
-router.delete("/deleteFeedbackRajlaxmiById/:id", feedbackRajlaxmiController.deleteReview);
+router.get(
+  "/getSingleFeedbackRajlaxmiById/:id",
+  feedbackRajlaxmiController.getReviewById
+);
+router.put(
+  "/updateFeedbackRajlaxmiById/:id",
+  feedbackRajlaxmiController.updateReview
+);
+router.delete(
+  "/deleteFeedbackRajlaxmiById/:id",
+  feedbackRajlaxmiController.deleteReview
+);
 
 // Contact
 router.post("/createContactRajlaxmi", contactControllerRajlaxmi.createContact);
 router.get("/getAllContactRajlaxmi", contactControllerRajlaxmi.getAllContacts);
-router.get("/getSingleContactRajlaxmiById/:id", contactControllerRajlaxmi.getContactById);
-router.put("/updateContactRajlaxmiById/:id", contactControllerRajlaxmi.updateContact);
-router.delete("/deleteContactRajlaxmiById/:id", contactControllerRajlaxmi.deleteContact);
+router.get(
+  "/getSingleContactRajlaxmiById/:id",
+  contactControllerRajlaxmi.getContactById
+);
+router.put(
+  "/updateContactRajlaxmiById/:id",
+  contactControllerRajlaxmi.updateContact
+);
+router.delete(
+  "/deleteContactRajlaxmiById/:id",
+  contactControllerRajlaxmi.deleteContact
+);
 
 // ----------------------------
 // Gauswarn Routes
 // ----------------------------
 // Products
 router.post("/createProductGauswarn", productControllerGauswarn.addProduct);
-router.post("/updateGauswarnProductById", productControllerGauswarn.updateProductPrices);
-router.post("/deleteGauswarnProductById", productControllerGauswarn.deleteProduct);
+router.post(
+  "/updateGauswarnProductById",
+  productControllerGauswarn.updateProductPrices
+);
+router.post(
+  "/deleteGauswarnProductById",
+  productControllerGauswarn.deleteProduct
+);
 router.get("/gauswarnGetAllProduct", productControllerGauswarn.getAllProducts);
 
 // Feedback (auth-protected)
-router.get("/allfeedback", authMiddleware, feedbackGauswarnController.getReviews);
-router.post("/createFeedback", authMiddleware, feedbackGauswarnController.feedback);
-router.post("/getSingleFeedbackById/:id", authMiddleware, feedbackGauswarnController.getReviewById);
-router.put("/updateFeedbackById/:id", authMiddleware, feedbackGauswarnController.updateReviewById);
-router.delete("/deleteFeedbackById/:id", authMiddleware, feedbackGauswarnController.deleteReviewById);
+router.get(
+  "/allfeedback",
+  authMiddleware,
+  feedbackGauswarnController.getReviews
+);
+router.post(
+  "/createFeedback",
+  authMiddleware,
+  feedbackGauswarnController.feedback
+);
+router.post(
+  "/getSingleFeedbackById/:id",
+  authMiddleware,
+  feedbackGauswarnController.getReviewById
+);
+router.put(
+  "/updateFeedbackById/:id",
+  authMiddleware,
+  feedbackGauswarnController.updateReviewById
+);
+router.delete(
+  "/deleteFeedbackById/:id",
+  authMiddleware,
+  feedbackGauswarnController.deleteReviewById
+);
 
-
-// Image and Video upload 
+// Image and Video upload
 // router.post("/imageUpload", imageUploadControllerGauswarn.imageAndVideoUpload);
 
 // BASE64
 router.post("/base64", imageUploadControllerGauswarn.uploadMedia);
 
 // Single file
-router.post("/imageUpload", upload.single("file"), imageUploadControllerGauswarn.uploadMedia);
+router.post(
+  "/imageUpload",
+  upload.single("file"),
+  imageUploadControllerGauswarn.uploadMedia
+);
 
 // Multiple file
-router.post("/files", upload.array("files"), imageUploadControllerGauswarn.uploadMedia);
+router.post(
+  "/files",
+  upload.array("files"),
+  imageUploadControllerGauswarn.uploadMedia
+);
 
+router.post(
+  "/add-images",
+  upload.array("images", 10),
+  productControllerGauswarn.addProductImages
+);
 
-router.post("/add-images", upload.array("images", 10), productControllerGauswarn.addProductImages);
-
-router.post("/replace-image", upload.single("image"), productControllerGauswarn.replaceProductImage);
-
-
+router.post(
+  "/replace-image",
+  upload.single("image"),
+  productControllerGauswarn.replaceProductImage
+);
 
 // GET all 4 banners
 router.get("/home-banners", homeBannerControllerGauswarn.getHomeBanners);
 // POST all 4 banners
-router.post("/home-banners-images", upload.array("banner", 4), homeBannerControllerGauswarn.updateHomeBanner);
-
-
+router.post(
+  "/home-banners-images",
+  upload.single("banner"),
+  homeBannerControllerGauswarn.updateHomeBanner
+);
 // upload reels
-
 
 router.get("/reels/all", reelControllerGauswarn.getAllReelsList);
 
 router.post(
   "/upload-reel",
-  upload.fields([{ name: "video", maxCount: 1 }, { name: "thumbnail", maxCount: 1 }]),
+  upload.fields([
+    { name: "video", maxCount: 1 },
+    { name: "thumbnail", maxCount: 1 },
+  ]),
   reelControllerGauswarn.uploadReel
 );
 
@@ -156,13 +234,50 @@ router.delete("/reels/:id", reelControllerGauswarn.deleteReelById);
 
 router.post(
   "/update/:id",
-  upload.fields([{ name: "video", maxCount: 1 }, { name: "thumbnail", maxCount: 1 }]),
+  upload.fields([
+    { name: "video", maxCount: 1 },
+    { name: "thumbnail", maxCount: 1 },
+  ]),
   reelControllerGauswarn.updateReel
 );
 
+// blogs routes
+// CREATE BLOG
+router.post(
+  "/blogs/create",
+  upload.single("image"),
+  (req, res, next) => {
+    console.log("DEBUG BODYssssssssssssss:", req.body);
+    console.log("DEBUG FILE:", req.file);
+    next();
+  },
+  blogsControllerGauswarn.createBlogController
+);
+// UPDATE BLOG
+router.post(
+  "/blogs/update/:id",
+  upload.single("image"),
+  blogsControllerGauswarn.updateBlogController
+);
 
+// GET ALL
+router.get("/blogs", blogsControllerGauswarn.getAllBlogsController);
+
+// GET BY SLUG
+router.get("/blogs/single/:slug", blogsControllerGauswarn.getSingleBlogBySlug);
+
+
+router.get("/blogs/:id", blogsControllerGauswarn.getBlogByIdController);
+
+
+// DELETE
+router.delete("/blogs/:id", blogsControllerGauswarn.deleteBlogController);
 // Contact (auth-protected)
-router.get("/getAllContact", authMiddleware, contactControllerGauswarn.getAllContact);
+router.get(
+  "/getAllContact",
+  authMiddleware,
+  contactControllerGauswarn.getAllContact
+);
 
 // ----------------------------
 // Global Error Handler
