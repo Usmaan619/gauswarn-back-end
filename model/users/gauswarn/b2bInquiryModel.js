@@ -126,44 +126,73 @@ exports.getById = async (id) => {
 /* =====================================================
     UPDATE Inquiry
 ===================================================== */
+// exports.update = async (id, data) => {
+//   try {
+//     return await withConnection(async (conn) => {
+//       const sql = `
+//         UPDATE gauswarn_inquiries SET
+//           full_name = ?,
+//           business_name = ?,
+//           phone = ?,
+//           email = ?,
+//           business_type = ?,
+//           monthly_requirement = ?,
+//           message = ?,
+//           status = ?
+//         WHERE id = ?
+//       `;
+
+//       const values = [
+//         data.full_name,
+//         data.business_name,
+//         data.phone,
+//         data.email,
+//         data.business_type,
+//         data.monthly_requirement,
+//         data.message,
+//         data.status,
+//         id,
+//       ];
+
+//       const [result] = await conn.execute(sql, values);
+
+//       return result.affectedRows;
+//     });
+//   } catch (error) {
+//     console.error(
+//       " Error in update inquiry:",
+//       error.message,
+//       moment().format("YYYY-MM-DD HH:mm:ss")
+//     );
+//     throw new Error("Unable to update inquiry");
+//   }
+// };
 exports.update = async (id, data) => {
   try {
     return await withConnection(async (conn) => {
+      let fields = [];
+      let values = [];
+
+      // Dynamically build update fields
+      for (let key in data) {
+        fields.push(`${key} = ?`);
+        values.push(data[key] ?? null); // null instead of undefined
+      }
+
       const sql = `
-        UPDATE gauswarn_inquiries SET 
-          full_name = ?, 
-          business_name = ?, 
-          phone = ?, 
-          email = ?, 
-          business_type = ?, 
-          monthly_requirement = ?, 
-          message = ?, 
-          status = ?
+        UPDATE gauswarn_inquiries 
+        SET ${fields.join(", ")}
         WHERE id = ?
       `;
 
-      const values = [
-        data.full_name,
-        data.business_name,
-        data.phone,
-        data.email,
-        data.business_type,
-        data.monthly_requirement,
-        data.message,
-        data.status,
-        id,
-      ];
+      values.push(id);
 
       const [result] = await conn.execute(sql, values);
 
       return result.affectedRows;
     });
   } catch (error) {
-    console.error(
-      " Error in update inquiry:",
-      error.message,
-      moment().format("YYYY-MM-DD HH:mm:ss")
-    );
+    console.error(" Error in update inquiry:", error.message);
     throw new Error("Unable to update inquiry");
   }
 };
@@ -177,14 +206,10 @@ exports.delete = async (id) => {
       const sql = "DELETE FROM gauswarn_inquiries WHERE id = ?";
       const [result] = await conn.execute(sql, [id]);
 
-      return result.affectedRows;
+      return result.affectedRows; // returns 1 if deleted
     });
   } catch (error) {
-    console.error(
-      " Error in delete inquiry:",
-      error.message,
-      moment().format("YYYY-MM-DD HH:mm:ss")
-    );
+    console.error("Error deleting inquiry:", error.message);
     throw new Error("Unable to delete inquiry");
   }
 };

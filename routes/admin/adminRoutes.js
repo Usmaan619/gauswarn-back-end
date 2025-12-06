@@ -32,6 +32,13 @@ const reelControllerGauswarn = require("../../controllers/users/gauswarn/reelCon
 const blogsControllerGauswarn = require("../../controllers/users/gauswarn/blogController");
 
 const upload = require("../../middlewares/multer");
+const {
+  createInquiry,
+  getInquiries,
+  getInquiryById,
+  updateInquiry,
+  deleteInquiry,
+} = require("../../controllers/users/gauswarn/b2bInquiryController");
 
 // ----------------------------
 // Admin Routes
@@ -53,6 +60,8 @@ router.get(
   authMiddleware,
   userInfoController.getAllOrderDetails
 );
+router.post("/updateOrderStatus/:id", authMiddleware, userInfoController.updateOrderStatus);
+
 router.post(
   "/getAllSales",
   authMiddleware,
@@ -266,12 +275,25 @@ router.get("/blogs", blogsControllerGauswarn.getAllBlogsController);
 // GET BY SLUG
 router.get("/blogs/single/:slug", blogsControllerGauswarn.getSingleBlogBySlug);
 
-
 router.get("/blogs/:id", blogsControllerGauswarn.getBlogByIdController);
-
 
 // DELETE
 router.delete("/blogs/:id", blogsControllerGauswarn.deleteBlogController);
+
+// ** B2B Inquiry start  *//
+
+router.post("/createb2bInquiry", createInquiry);
+
+router.get("/getb2bInquiries", getInquiries); // pagination + search + filter
+
+router.get("/getb2bInquiryById/:id", getInquiryById);
+
+router.post("/updateb2bInquiry/:id", updateInquiry);
+
+router.delete("/deleteb2bInquiry/:id", deleteInquiry);
+
+// ** B2B Inquiry end  *//
+
 // Contact (auth-protected)
 router.get(
   "/getAllContact",

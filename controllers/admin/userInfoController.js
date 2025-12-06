@@ -25,3 +25,19 @@ exports.getAllOrderDetails = asyncHandler(async (req, res) => {
     res.json({ error: "Failed to fetch products" });
   }
 });
+
+
+
+exports.updateOrderStatus = asyncHandler(async (req, res) => {
+  try {
+    const { status } = req.body;
+    const { id } = req.params;
+
+    const result = await adminUserInfoModal.updateOrderStatus(id, status);
+
+    res.json({ success: true, message: "Order status updated!" });
+
+  } catch (error) {
+    res.json({ success: false, message: "Failed to update" });
+  }
+});

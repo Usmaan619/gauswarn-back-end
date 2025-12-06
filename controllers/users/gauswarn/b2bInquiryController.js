@@ -58,14 +58,31 @@ exports.updateInquiry = asyncHandler(async (req, res) => {
   res.json({ success: true, message: "Inquiry updated successfully" });
 });
 
-// DELETE
+/* =====================================================
+    DELETE Inquiry Controller
+===================================================== */
 exports.deleteInquiry = asyncHandler(async (req, res) => {
-  const affected = await InquiryModel.delete(req.params.id);
+  const inquiryId = req.params.id;
 
-  if (!affected)
-    return res
-      .status(404)
-      .json({ success: false, message: "Inquiry not found" });
+  if (!inquiryId) {
+    return res.status(400).json({
+      success: false,
+      message: "Inquiry ID is required",
+    });
+  }
 
-  res.json({ success: true, message: "Inquiry deleted successfully" });
+  const affected = await InquiryModel.delete(inquiryId);
+
+  if (!affected) {
+    return res.status(404).json({
+      success: false,
+      message: "Inquiry not found",
+    });
+  }
+
+  return res.json({
+    success: true,
+    message: "Inquiry deleted successfully",
+  });
 });
+

@@ -69,7 +69,7 @@ router.get("/getb2bInquiries", getInquiries); // pagination + search + filter
 
 router.get("/getb2bInquiryById/:id", getInquiryById);
 
-router.put("/updateb2bInquiry/:id", updateInquiry);
+router.post("/updateb2bInquiry/:id", updateInquiry);
 
 router.delete("/deleteb2bInquiry/:id", deleteInquiry);
 
