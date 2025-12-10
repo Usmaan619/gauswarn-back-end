@@ -11,9 +11,6 @@
   "license": "MIT",
   "description": "",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.940.0",
-    "@aws-sdk/s3-request-presigner": "^3.940.0",
-    "aws-sdk": "^2.1692.0",
     "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
@@ -31,7 +28,9 @@
     "razorpay": "^2.9.6",
     "sequelize": "^6.37.6",
     "uuid": "^11.0.3",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "cloudinary": "^2.5.1",
+    "multer-storage-cloudinary": "^4.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"

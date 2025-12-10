@@ -1,148 +1,149 @@
-const {
-  S3Client,
-  PutObjectCommand,
-  DeleteObjectCommand,
-} = require("@aws-sdk/client-s3");
+// const cloudinary = require("../config/cloudinary");
+// const { v4: uuid } = require("uuid");
+
+// // ===================== DELETE (by URL) =====================
+// exports.deleteFromS3 = async (fileUrl) => {
+//   try {
+//     if (!fileUrl) return;
+
+//     // Extract publicId from URL
+//     const parts = fileUrl.split("/");
+//     const filename = parts.pop().split(".")[0];
+//     const folder = parts.pop();
+//     const publicId = `${folder}/${filename}`;
+
+//     await cloudinary.uploader.destroy(publicId);
+
+//     console.log("Old image deleted:", publicId);
+//   } catch (err) {
+//     console.log("Delete error:", err.message);
+//   }
+// };
+
+// // ===================== uploadProductImage =====================
+// exports.uploadProductImage = async (buffer, mimetype, product_id) => {
+//   return uploadToFolder(buffer, `products/${product_id}`);
+// };
+
+// // ===================== uploadBufferToS3 =====================
+// exports.uploadBufferToS3 = async (buffer, mimetype) => {
+//   return uploadToFolder(buffer, "uploads");
+// };
+
+// // ===================== uploadBase64ToS3 =====================
+// exports.uploadBase64ToS3 = async (base64String) => {
+//   const res = await cloudinary.uploader.upload(base64String, {
+//     folder: "uploads",
+//     resource_type: "auto",
+//   });
+
+//   return res.secure_url;
+// };
+
+// // ===================== uploadMultipleBuffersToS3 =====================
+// exports.uploadMultipleBuffersToS3 = async (files) => {
+//   return Promise.all(
+//     files.map((file) => uploadToFolder(file.buffer, "uploads"))
+//   );
+// };
+
+// // ===================== uploadBufferAndReelsToS3 =====================
+// exports.uploadBufferAndReelsToS3 = async (buffer, mimetype) => {
+//   return uploadToFolder(buffer, "reels");
+// };
+
+// // ===================== uploadBufferAndBlogsToS3 =====================
+// exports.uploadBufferAndBlogsToS3 = async (buffer, mimetype) => {
+//   return uploadToFolder(buffer, "blogs");
+// };
+
+// // ===================== CORE uploader (stream) =====================
+// async function uploadToFolder(buffer, folder) {
+//   return new Promise((resolve, reject) => {
+//     cloudinary.uploader
+//       .upload_stream(
+//         {
+//           folder,
+//           resource_type: "auto",
+//         },
+//         (err, result) => {
+//           if (err) return reject(err);
+
+//           resolve(result.secure_url);
+//         }
+//       )
+//       .end(buffer);
+//   });
+// }
+const cloudinary = require("../config/cloudinary");
 const { v4: uuid } = require("uuid");
-require("dotenv").config();
 
-const s3 = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
-
+// deleteFromS3 -> Cloudinary
 exports.deleteFromS3 = async (fileUrl) => {
   try {
     if (!fileUrl) return;
 
-    // Extract S3 Key from URL
-    const key = fileUrl.split(".amazonaws.com/")[1];
+    const parts = fileUrl.split("/");
+    const filename = parts.pop().split(".")[0];
+    const folder = parts.pop();
+    const publicId = `${folder}/${filename}`;
 
-    const params = {
-      Bucket: process.env.AWS_BUCKET_NAME,
-      Key: key,
-    };
-
-    await s3.send(new DeleteObjectCommand(params));
-    console.log("Old image deleted:", key);
+    await cloudinary.uploader.destroy(publicId);
   } catch (err) {
     console.log("Delete error:", err.message);
   }
 };
 
-/**
- * Upload file buffer to S3 inside product folder
- * @param {Buffer} buffer
- * @param {string} mimetype
- * @param {string} product_id
- * @returns public image URL
- */
-
-exports.uploadProductImage = async (buffer, mimetype, product_id) => {
-  const ext = mimetype.split("/")[1];
-  const fileName = `${uuid()}.${ext}`;
-
-  // FOLDER FORMAT: products/<product_id>/<uuid>.<ext>
-  const Key = `products/${product_id}/${fileName}`;
-
-  const params = {
-    Bucket: process.env.AWS_BUCKET_NAME,
-    Key,
-    Body: buffer,
-    ContentType: mimetype,
-    // ACL: "public-read"
-  };
-
-  await s3.send(new PutObjectCommand(params));
-
-  return `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${Key}`;
-};
-
-// -------------------- FILE / BUFFER UPLOAD --------------------
+// uploadBufferToS3
 exports.uploadBufferToS3 = async (buffer, mimetype) => {
-  const Key = `uploads/${uuid()}.${mimetype.split("/")[1]}`;
-
-  const params = {
-    Bucket: process.env.AWS_BUCKET_NAME,
-    Key,
-    Body: buffer,
-    ContentType: mimetype,
-    // ACL: "public-read",
-  };
-
-  await s3.send(new PutObjectCommand(params));
-
-  return `https://${process.env.AWS_BUCKET_NAME}.s3.amazonaws.com/${Key}`;
+  return uploadToCloudinary(buffer, "uploads");
 };
 
-// -------------------- BASE64 UPLOAD --------------------
-exports.uploadBase64ToS3 = async (base64String) => {
-  const matches = base64String.match(/^data:(.+);base64,(.+)$/);
-
-  if (!matches) throw new Error("Invalid base64 format");
-
-  const mimetype = matches[1];
-  const buffer = Buffer.from(matches[2], "base64");
-
-  return this.uploadBufferToS3(buffer, mimetype);
+// uploadProductImage
+exports.uploadProductImage = async (buffer, mimetype, product_id) => {
+  return uploadToCloudinary(buffer, `products/${product_id}`);
 };
 
-exports.uploadMultipleBuffersToS3 = async (files) => {
-  // files = [{ buffer, mimetype }, { buffer, mimetype }, ... ]
-
-  const uploadPromises = files.map(async (file) => {
-    const Key = `uploads/${uuid()}.${file.mimetype.split("/")[1]}`;
-
-    const params = {
-      Bucket: process.env.AWS_BUCKET_NAME,
-      Key,
-      Body: file.buffer,
-      ContentType: file.mimetype,
-    };
-
-    await s3.send(new PutObjectCommand(params));
-    return {
-      url: `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${Key}`,
-      key: Key,
-    };
-  });
-
-  return await Promise.all(uploadPromises);
-};
-
-// -------------------- FILE /  REELS  /  BUFFER UPLOAD --------------------
+// uploadBufferAndReelsToS3
 exports.uploadBufferAndReelsToS3 = async (buffer, mimetype) => {
-  const Key = `reels/${uuid()}.${mimetype.split("/")[1]}`;
-
-  const params = {
-    Bucket: process.env.AWS_BUCKET_NAME,
-    Key,
-    Body: buffer,
-    ContentType: mimetype,
-    // ACL: "public-read",
-  };
-
-  await s3.send(new PutObjectCommand(params));
-
-  return `https://${process.env.AWS_BUCKET_NAME}.s3.amazonaws.com/${Key}`;
+  return uploadToCloudinary(buffer, "reels");
 };
 
-// -------------------- FILE / BLOGS /BUFFER UPLOAD --------------------
+// uploadBufferAndBlogsToS3
 exports.uploadBufferAndBlogsToS3 = async (buffer, mimetype) => {
-  const Key = `blogs/${uuid()}.${mimetype.split("/")[1]}`;
-
-  const params = {
-    Bucket: process.env.AWS_BUCKET_NAME,
-    Key,
-    Body: buffer,
-    ContentType: mimetype,
-    // ACL: "public-read",
-  };
-
-  await s3.send(new PutObjectCommand(params));
-
-  return `https://${process.env.AWS_BUCKET_NAME}.s3.amazonaws.com/${Key}`;
+  return uploadToCloudinary(buffer, "blogs");
 };
+
+// uploadMultipleBuffersToS3
+exports.uploadMultipleBuffersToS3 = async (files) => {
+  return Promise.all(
+    files.map((file) => uploadToCloudinary(file.buffer, "uploads"))
+  );
+};
+
+// base64
+exports.uploadBase64ToS3 = async (base64) => {
+  const result = await cloudinary.uploader.upload(base64, {
+    folder: "uploads",
+    resource_type: "auto",
+  });
+  return result.secure_url;
+};
+
+// core
+function uploadToCloudinary(buffer, folder) {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader
+      .upload_stream(
+        {
+          folder,
+          resource_type: "auto",
+        },
+        (err, result) => {
+          if (err) return reject(err);
+          resolve(result.secure_url);
+        }
+      )
+      .end(buffer);
+  });
+}

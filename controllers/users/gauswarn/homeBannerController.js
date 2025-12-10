@@ -1,3 +1,4 @@
+const cloudinary = require("../../../config/cloudinary");
 const {
   getAllBanners,
   getBannerSlot,
@@ -9,6 +10,8 @@ const {
   uploadBufferToS3,
   deleteFromS3,
 } = require("../../../service/uploadFile");
+
+// const cloudinary = require("");
 
 // GET all banners
 exports.getHomeBanners = async (req, res) => {
@@ -176,6 +179,57 @@ exports.updateHomeBanner = async (req, res) => {
       slot,
       newUrl,
     });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getSignature = async (req, res) => {
+  const { folder, timestamp } = req.body;
+
+  const signature = cloudinary.utils.api_sign_request(
+    {
+      folder,
+      timestamp: parseInt(timestamp),
+    },
+    process.env.CLOUDINARY_API_SECRET
+  );
+
+  res.json({
+    signature,
+    timestamp,
+    folder,
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+  });
+};
+
+
+// In homeBannerController.js - add this NEW endpoint
+exports.updateHomeBannerByUrl = async (req, res) => {
+  try {
+    const { slot, url } = req.body;
+
+    if (!slot || !url) {
+      return res.status(400).json({ message: "Slot and URL required" });
+    }
+
+    if (![1, 2, 3, 4].includes(Number(slot))) {
+      return res.status(400).json({ message: "Invalid slot" });
+    }
+
+    await ensureHomeBannerRow();
+
+    // Get old banner and delete from S3
+    const oldBanner = await getBannerSlot(slot);
+    if (oldBanner) {
+      await deleteFromS3(oldBanner);
+    }
+
+    // Update DB with new URL
+    await updateBannerSlot(slot, url);
+
+    return res.json({ updated: true, slot, newUrl: url });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

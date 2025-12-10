@@ -45,11 +45,24 @@ const {
 // ----------------------------
 router.post("/register", registerController.adminUserRegister);
 router.post("/login", loginController.adminUserLogin);
+
 router.post("/forgetPassword", forgotPasswordController.forgetPassword);
 router.post("/reset", forgotPasswordController.passwordReset);
 router.post("/verifyOtp", forgotPasswordController.verifyOtp);
 
-router.get("/me", authMiddleware, registerController.meAPI);
+router.get(
+  "/getAllGauswarnUsers",
+  authMiddleware,
+  registerController.getAllGauswarnUsers
+);
+
+// update user
+router.post("/updateUser/:id", registerController.updateUser);
+
+// delete user
+router.delete("/deleteUser/:id", registerController.deleteUser);
+
+// router.get("/me", authMiddleware, registerController.meAPI);
 router.get(
   "/getAllCustomer",
   authMiddleware,
@@ -60,7 +73,11 @@ router.get(
   authMiddleware,
   userInfoController.getAllOrderDetails
 );
-router.post("/updateOrderStatus/:id", authMiddleware, userInfoController.updateOrderStatus);
+router.post(
+  "/updateOrderStatus/:id",
+  authMiddleware,
+  userInfoController.updateOrderStatus
+);
 
 router.post(
   "/getAllSales",
@@ -209,8 +226,16 @@ router.post(
   productControllerGauswarn.replaceProductImage
 );
 
+router.post("/banner-signature", homeBannerControllerGauswarn.getSignature);
+
 // GET all 4 banners
 router.get("/home-banners", homeBannerControllerGauswarn.getHomeBanners);
+
+router.post(
+  "/home-banners-url",
+  homeBannerControllerGauswarn.updateHomeBannerByUrl
+);
+
 // POST all 4 banners
 router.post(
   "/home-banners-images",
@@ -218,37 +243,9 @@ router.post(
   homeBannerControllerGauswarn.updateHomeBanner
 );
 // upload reels
-
-router.get("/reels/all", reelControllerGauswarn.getAllReelsList);
-
-router.post(
-  "/upload-reel",
-  upload.fields([
-    { name: "video", maxCount: 1 },
-    { name: "thumbnail", maxCount: 1 },
-  ]),
-  reelControllerGauswarn.uploadReel
-);
-
-router.post(
-  "/upload-multiple-reels",
-  upload.fields([
-    { name: "reels", maxCount: 10 },
-    { name: "thumbs", maxCount: 10 },
-  ]),
-  reelControllerGauswarn.uploadMultipleReels
-);
-
-router.delete("/reels/:id", reelControllerGauswarn.deleteReelById);
-
-router.post(
-  "/update/:id",
-  upload.fields([
-    { name: "video", maxCount: 1 },
-    { name: "thumbnail", maxCount: 1 },
-  ]),
-  reelControllerGauswarn.updateReel
-);
+router.post("/reels", reelControllerGauswarn.createReel); // add
+router.get("/reels/all", reelControllerGauswarn.listReels); // list
+router.delete("/reels-delete/:id", reelControllerGauswarn.deleteReelById); // delete
 
 // blogs routes
 // CREATE BLOG
