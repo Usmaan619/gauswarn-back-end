@@ -17,19 +17,36 @@ exports.createBlog = async (data) => {
   });
 };
 
-exports.getAllBlogs = async (page, limit) => {
+exports.getAllBlogs = async (page, limit, sortOrder = "DESC") => {
   return await withConnection(async (connection) => {
     const offset = (page - 1) * limit;
 
-    const [rows] = await connection.execute(
-      "SELECT * FROM gauswarn_blogs ORDER BY id DESC LIMIT ? OFFSET ?",
-      [limit, offset]
-    );
+    //  SQL LEVEL SORTING (FAST & CORRECT)
+    const query = `
+      SELECT *
+      FROM gauswarn_blogs
+      ORDER BY created_at ${sortOrder}
+      LIMIT ? OFFSET ?
+    `;
+
+    const [rows] = await connection.execute(query, [limit, offset]);
 
     return rows;
   });
 };
 
+// exports.getAllBlogs = async (page, limit) => {
+//   return await withConnection(async (connection) => {
+//     const offset = (page - 1) * limit;
+
+//     const [rows] = await connection.execute(
+//       "SELECT * FROM gauswarn_blogs ORDER BY id DESC LIMIT ? OFFSET ?",
+//       [limit, offset]
+//     );
+
+//     return rows;
+//   });
+// };
 
 exports.getBlogCount = async () => {
   return await withConnection(async (connection) => {

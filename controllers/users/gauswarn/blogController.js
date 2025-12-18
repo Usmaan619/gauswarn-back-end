@@ -123,12 +123,33 @@ exports.updateBlogController = async (req, res) => {
 // ============================
 // GET ALL BLOGS
 // ============================
+// exports.getAllBlogsController = async (req, res) => {
+//   try {
+//     const page = parseInt(req.query.page) || 1; // default 1
+//     const limit = parseInt(req.query.limit) || 10; // default 10
+
+//     const blogs = await getAllBlogs(page, limit);
+
+//     res.json({
+//       success: true,
+//       blogs,
+//       page,
+//       limit,
+//     });
+//   } catch (err) {
+//     res.status(500).json({ success: false, message: err.message });
+//   }
+// };
+
 exports.getAllBlogsController = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1; // default 1
-    const limit = parseInt(req.query.limit) || 10; // default 10
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
 
-    const blogs = await getAllBlogs(page, limit);
+    //  SORT PARAM (default = newest)
+    const sort = req.query.sort === "old" ? "ASC" : "DESC";
+
+    const blogs = await getAllBlogs(page, limit, sort);
 
     res.json({
       success: true,
@@ -137,7 +158,10 @@ exports.getAllBlogsController = async (req, res) => {
       limit,
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 };
 

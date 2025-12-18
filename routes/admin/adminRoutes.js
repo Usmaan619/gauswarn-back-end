@@ -40,6 +40,8 @@ const {
   deleteInquiry,
 } = require("../../controllers/users/gauswarn/b2bInquiryController");
 
+const newsletterController = require("../../controllers/users/gauswarn/newsletterController");
+
 // ----------------------------
 // Admin Routes
 // ----------------------------
@@ -290,6 +292,18 @@ router.post("/updateb2bInquiry/:id", updateInquiry);
 router.delete("/deleteb2bInquiry/:id", deleteInquiry);
 
 // ** B2B Inquiry end  *//
+
+//Newsletter Routes
+
+router.get("/getNewsletter", newsletterController.getNewsletter);
+router.post("/createNewsletter", newsletterController.createNewsletter);
+router.post(
+  "/updateNewsletterStatus/:id",
+  newsletterController.updateNewsletterStatus
+);
+router.delete("/deleteNewsletter/:id", newsletterController.deleteNewsletter);
+
+// End Newsletter Routes
 
 // Contact (auth-protected)
 router.get(
