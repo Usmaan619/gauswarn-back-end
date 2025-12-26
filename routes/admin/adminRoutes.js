@@ -42,6 +42,8 @@ const {
 
 const newsletterController = require("../../controllers/users/gauswarn/newsletterController");
 
+const topBannerOfferController = require("../../controllers/users/gauswarn/topBannerOfferController");
+
 // ----------------------------
 // Admin Routes
 // ----------------------------
@@ -304,6 +306,9 @@ router.post(
 router.delete("/deleteNewsletter/:id", newsletterController.deleteNewsletter);
 
 // End Newsletter Routes
+
+router.get("/getAllOffer", topBannerOfferController.getOffersController);
+router.post("/updateOffer", topBannerOfferController.updateOffersController);
 
 // Contact (auth-protected)
 router.get(
