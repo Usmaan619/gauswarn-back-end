@@ -34,7 +34,7 @@ exports.getFilteredPaymentData = async (filterType, month, year) => {
           SUM(user_total_amount) AS daily_total_sales
         FROM gauswarn_payment
         WHERE date BETWEEN ? AND ?
-          AND status = 'captured'
+          AND status != 'Cancel'
         GROUP BY day;
       `;
 
@@ -44,7 +44,7 @@ exports.getFilteredPaymentData = async (filterType, month, year) => {
           SUM(user_total_amount) AS total_sales
         FROM gauswarn_payment
         WHERE date BETWEEN ? AND ?
-          AND status = 'captured';
+          AND status != 'Cancel';
       `;
 
       const profitDataQuery = `
@@ -52,14 +52,14 @@ exports.getFilteredPaymentData = async (filterType, month, year) => {
           user_total_amount, purchase_price, product_quantity
         FROM gauswarn_payment
         WHERE date BETWEEN ? AND ?
-          AND status = 'captured';
+          AND status != 'Cancel';
       `;
 
       const totalOrdersQuery = `
         SELECT COUNT(*) AS total_orders
         FROM gauswarn_payment
         WHERE date BETWEEN ? AND ?
-          AND status = 'captured';
+          AND status != 'Cancel';
       `;
 
       const totalProductsQuery = `
@@ -71,13 +71,13 @@ exports.getFilteredPaymentData = async (filterType, month, year) => {
         SELECT *
         FROM gauswarn_payment
         WHERE date BETWEEN ? AND ?
-          AND status = 'captured';
+          AND status != 'Cancel';
       `;
 
       const recentOrdersQuery = `
         SELECT *
         FROM gauswarn_payment
-        WHERE status = 'captured'
+        WHERE status != 'Cancel'
         ORDER BY date DESC, time DESC
         LIMIT 10;
       `;
@@ -105,7 +105,7 @@ exports.getFilteredPaymentData = async (filterType, month, year) => {
         totalProfit += calculateProfit(
           row.user_total_amount,
           row.purchase_price,
-          row.product_quantity
+          row.product_quantity,
         );
       }
 
@@ -160,7 +160,7 @@ exports.getFilteredPaymentDataRajlaxmi = async (filterType, month, year) => {
           SUM(user_total_amount) AS daily_total_sales
         FROM rajlaxmi_payment
         WHERE date BETWEEN ? AND ?
-          AND status = 'captured'
+          AND status != 'Cancel'
         GROUP BY day;
       `;
 
@@ -170,7 +170,7 @@ exports.getFilteredPaymentDataRajlaxmi = async (filterType, month, year) => {
           SUM(user_total_amount) AS total_sales
         FROM rajlaxmi_payment
         WHERE date BETWEEN ? AND ?
-          AND status = 'captured';
+          AND status != 'Cancel';
       `;
 
       const profitDataQuery = `
@@ -178,7 +178,7 @@ exports.getFilteredPaymentDataRajlaxmi = async (filterType, month, year) => {
           user_total_amount, purchase_price, product_quantity
         FROM rajlaxmi_payment
         WHERE date BETWEEN ? AND ?
-          AND status = 'captured';
+          AND status != 'Cancel';
       `;
 
       const totalOrdersQuery = `
@@ -197,7 +197,7 @@ exports.getFilteredPaymentDataRajlaxmi = async (filterType, month, year) => {
         SELECT *
         FROM rajlaxmi_payment
         WHERE date BETWEEN ? AND ?
-          AND status = 'captured';
+          AND status != 'Cancel';
       `;
 
       const recentOrdersQuery = `
@@ -231,7 +231,7 @@ exports.getFilteredPaymentDataRajlaxmi = async (filterType, month, year) => {
         totalProfit += calculateProfit(
           row.user_total_amount,
           row.purchase_price,
-          row.product_quantity
+          row.product_quantity,
         );
       }
 
@@ -254,11 +254,6 @@ exports.getFilteredPaymentDataRajlaxmi = async (filterType, month, year) => {
   }
 };
 
-
-
-
-
-
 // exports.getFilteredPaymentDataRajlaxmi = async (filterType, month, year) => {
 //   try {
 //     let startDate, endDate;
@@ -278,31 +273,31 @@ exports.getFilteredPaymentDataRajlaxmi = async (filterType, month, year) => {
 
 //     return await withConnection(async (connection) => {
 //       const dailyQuery = `
-//         SELECT 
+//         SELECT
 //           DATE_FORMAT(date, '%Y-%m-%d') AS day,
 //           COUNT(*) AS daily_total_users,
 //           SUM(user_total_amount) AS daily_total_sales
 //         FROM rajlaxmi_payment
 //         WHERE date BETWEEN ? AND ?
-//           AND status = 'captured'
+//           AND status = 'Cancel'
 //         GROUP BY day;
 //       `;
 
 //       const summaryQuery = `
-//         SELECT 
+//         SELECT
 //           COUNT(*) AS total_users,
 //           SUM(user_total_amount) AS total_sales
 //         FROM rajlaxmi_payment
 //         WHERE date BETWEEN ? AND ?
-//           AND status = 'captured';
+//           AND status = 'Cancel';
 //       `;
 
 //       const profitDataQuery = `
-//         SELECT 
+//         SELECT
 //           user_total_amount, purchase_price, product_quantity
 //         FROM rajlaxmi_payment
 //         WHERE date BETWEEN ? AND ?
-//           AND status = 'captured';
+//           AND status = 'Cancel';
 //       `;
 
 //       const totalOrdersQuery = `
@@ -316,11 +311,11 @@ exports.getFilteredPaymentDataRajlaxmi = async (filterType, month, year) => {
 //         SELECT COUNT(*) AS total_products
 //         FROM rajlaxmi_payment
 //         WHERE date BETWEEN ? AND ?
-//           AND status = 'captured';
+//           AND status = 'Cancel';
 //       `;
 
 //       const topUsersQuery = `
-//         SELECT 
+//         SELECT
 //           u.firstName,
 //           u.lastName,
 //           u.email,
@@ -332,7 +327,7 @@ exports.getFilteredPaymentDataRajlaxmi = async (filterType, month, year) => {
 //         FROM rajlaxmi_payment p
 //         JOIN rajlaxmi_user u ON p.uid = u.uid
 //         WHERE p.date BETWEEN ? AND ?
-//           AND p.status = 'captured';
+//           AND p.status = 'Cancel';
 //       `;
 
 //       const recentOrdersQuery = `
