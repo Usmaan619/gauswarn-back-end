@@ -32,7 +32,7 @@ exports.create = async (data) => {
     console.error(
       " Error in create inquiry:",
       error.message,
-      moment().format("YYYY-MM-DD HH:mm:ss")
+      moment().format("YYYY-MM-DD HH:mm:ss"),
     );
     throw new Error("Unable to create inquiry");
   }
@@ -41,66 +41,124 @@ exports.create = async (data) => {
 /* =====================================================
     GET ALL - Pagination + Search + Filter
 ===================================================== */
+// exports.getAll = async ({ page, limit, search, status }) => {
+//   try {
+//     return await withConnection(async (conn) => {
+//       const offset = (page - 1) * limit;
+
+//       let where = "WHERE 1=1";
+//       const params = [];
+
+//       if (search) {
+//         where += ` AND (
+//           full_name LIKE ? OR
+//           business_name LIKE ? OR
+//           email LIKE ? OR
+//           phone LIKE ? OR
+//           business_type LIKE ? OR
+//           message LIKE ?
+//         )`;
+
+//         params.push(
+//           `%${search}%`,
+//           `%${search}%`,
+//           `%${search}%`,
+//           `%${search}%`,
+//           `%${search}%`,
+//           `%${search}%`
+//         );
+//       }
+
+//       if (status) {
+//         where += " AND status = ?";
+//         params.push(status);
+//       }
+
+//       const sql = `
+//         SELECT * FROM gauswarn_inquiries
+//         ${where}
+//         ORDER BY created_at DESC
+//         LIMIT ? OFFSET ?
+//       `;
+
+//       const countSql = `
+//         SELECT COUNT(*) as total FROM gauswarn_inquiries ${where}
+//       `;
+
+//       const [rows] = await conn.execute(sql, [...params, limit, offset]);
+//       const [countResult] = await conn.execute(countSql, params);
+
+//       return {
+//         data: rows,
+//         total: countResult[0].total,
+//       };
+//     });
+//   } catch (error) {
+//     console.error(
+//       " Error in getAll gauswarn_inquiries:",
+//       error.message,
+//       moment().format("YYYY-MM-DD HH:mm:ss")
+//     );
+//     throw new Error("Unable to fetch gauswarn_inquiries");
+//   }
+// };
+
 exports.getAll = async ({ page, limit, search, status }) => {
-  try {
-    return await withConnection(async (conn) => {
-      const offset = (page - 1) * limit;
+  return await withConnection(async (conn) => {
 
-      let where = "WHERE 1=1";
-      const params = [];
+    //  sanitize numbers
+    page = Number(page);
+    limit = Number(limit);
 
-      if (search) {
-        where += ` AND (
-          full_name LIKE ? OR 
-          business_name LIKE ? OR 
-          email LIKE ? OR 
-          phone LIKE ? OR 
-          business_type LIKE ? OR
-          message LIKE ?
-        )`;
+    if (!Number.isInteger(page) || page < 1) page = 1;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) limit = 10;
 
-        params.push(
-          `%${search}%`,
-          `%${search}%`,
-          `%${search}%`,
-          `%${search}%`,
-          `%${search}%`,
-          `%${search}%`
-        );
-      }
+    const offset = (page - 1) * limit;
 
-      if (status) {
-        where += " AND status = ?";
-        params.push(status);
-      }
+    let where = "WHERE 1=1";
+    const params = [];
 
-      const sql = `
-        SELECT * FROM gauswarn_inquiries 
-        ${where}
-        ORDER BY created_at DESC
-        LIMIT ? OFFSET ?
-      `;
+    if (search && search.trim()) {
+      where += ` AND (
+        full_name LIKE ? OR
+        business_name LIKE ? OR
+        email LIKE ? OR
+        phone LIKE ? OR
+        business_type LIKE ? OR
+        message LIKE ?
+      )`;
 
-      const countSql = `
-        SELECT COUNT(*) as total FROM gauswarn_inquiries ${where}
-      `;
+      const s = `%${search}%`;
+      params.push(s, s, s, s, s, s);
+    }
 
-      const [rows] = await conn.execute(sql, [...params, limit, offset]);
-      const [countResult] = await conn.execute(countSql, params);
+    if (status && status.trim()) {
+      where += " AND status = ?";
+      params.push(status);
+    }
 
-      return {
-        data: rows,
-        total: countResult[0].total,
-      };
-    });
-  } catch (error) {
-    console.error(
-      " Error in getAll gauswarn_inquiries:",
-      error.message,
-      moment().format("YYYY-MM-DD HH:mm:ss")
-    );
-    throw new Error("Unable to fetch gauswarn_inquiries");
-  }
+    const sql = `
+      SELECT *
+      FROM gauswarn_inquiries
+      ${where}
+      ORDER BY created_at DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+
+    const countSql = `
+      SELECT COUNT(*) AS total
+      FROM gauswarn_inquiries
+      ${where}
+    `;
+
+    const [rows] = await conn.execute(sql, params);
+    const [count] = await conn.execute(countSql, params);
+
+    return {
+      data: rows,
+      total: count[0].total
+    };
+  });
 };
 
 /* =====================================================
@@ -117,7 +175,7 @@ exports.getById = async (id) => {
     console.error(
       " Error in getById inquiry:",
       error.message,
-      moment().format("YYYY-MM-DD HH:mm:ss")
+      moment().format("YYYY-MM-DD HH:mm:ss"),
     );
     throw new Error("Unable to fetch inquiry");
   }

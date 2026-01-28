@@ -2,31 +2,46 @@ const { withConnection } = require("../../../utils/helper");
 
 exports.getAll = async ({ page, limit, search, status }) => {
   return await withConnection(async (connection) => {
+
+    // 🔒 Force numbers
+    page = Number(page);
+    limit = Number(limit);
+
+    if (!Number.isInteger(page) || page < 1) page = 1;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) limit = 10;
+
     const offset = (page - 1) * limit;
 
     let where = "WHERE 1=1";
-    let values = [];
+    const values = [];
 
-    if (search) {
+    if (search && search.trim()) {
       where += " AND email LIKE ?";
       values.push(`%${search}%`);
     }
 
-    if (status !== "") {
+    if (status && status.trim()) {
       where += " AND status = ?";
       values.push(status);
     }
 
-    const [rows] = await connection.execute(
-      `SELECT * FROM gauswarn_newsletter_subscribers ${where}
-       ORDER BY id DESC LIMIT ? OFFSET ?`,
-      [...values, limit, offset]
-    );
+    // ❌ NO ? FOR LIMIT / OFFSET
+    const sql = `
+      SELECT *
+      FROM gauswarn_newsletter_subscribers
+      ${where}
+      ORDER BY id DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `;
 
-    const [[{ total }]] = await connection.execute(
-      `SELECT COUNT(*) as total FROM gauswarn_newsletter_subscribers ${where}`,
-      values
-    );
+    const countSql = `
+      SELECT COUNT(*) AS total
+      FROM gauswarn_newsletter_subscribers
+      ${where}
+    `;
+
+    const [rows] = await connection.execute(sql, values);
+    const [[{ total }]] = await connection.execute(countSql, values);
 
     return {
       rows,
@@ -38,6 +53,7 @@ exports.getAll = async ({ page, limit, search, status }) => {
     };
   });
 };
+
 
 exports.create = async (email) => {
   return await withConnection(async (connection) => {

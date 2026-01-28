@@ -13,6 +13,26 @@ exports.createInquiry = asyncHandler(async (req, res) => {
 });
 
 // GET ALL — Pagination + Search + Filter
+// exports.getInquiries = asyncHandler(async (req, res) => {
+//   const page = parseInt(req.query.page) || 1;
+//   const limit = parseInt(req.query.limit) || 10;
+//   const search = req.query.search || "";
+//   const status = req.query.status || "";
+
+//   const result = await InquiryModel.getAll({ page, limit, search, status });
+
+//   res.json({
+//     success: true,
+//     pagination: {
+//       totalItems: result.total,
+//       limit,
+//       page,
+//       totalPages: Math.ceil(result.total / limit),
+//     },
+//     data: result.data,
+//   });
+// });
+
 exports.getInquiries = asyncHandler(async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
@@ -85,4 +105,3 @@ exports.deleteInquiry = asyncHandler(async (req, res) => {
     message: "Inquiry deleted successfully",
   });
 });
-
