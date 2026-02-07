@@ -6,7 +6,11 @@ router.get("/meta-feed", async (req, res) => {
   try {
     const products = await productModel.getAllProducts();
 
-    const feed = products.map((p) => {
+    // CSV header
+    let csv =
+      "id,title,description,availability,condition,price,link,image_link,brand\n";
+
+    products.forEach((p) => {
       let images = [];
 
       try {
@@ -15,23 +19,26 @@ router.get("/meta-feed", async (req, res) => {
         images = [];
       }
 
-      return {
-        id: String(p.product_id),
-        title: `${p.product_name} ${p.product_weight}`,
-        description: `${p.product_name} - ${p.product_weight}`,
-        availability: "in stock",
-        condition: "new",
-        price: `${p.product_price} INR`,
-        link: `https://gauswarn.com/product/${p.product_id}`,
-        image_link: images[0] || "",
-        brand: "Gauswarn",
-      };
+      const row = [
+        p.product_id,
+        `"${p.product_name} ${p.product_weight}"`,
+        `"${p.product_name} - ${p.product_weight}"`,
+        "in stock",
+        "new",
+        `${p.product_price} INR`,
+        `https://gauswarn.com/product/${p.product_id}`,
+        images[0] || "",
+        "Gauswarn",
+      ].join(",");
+
+      csv += row + "\n";
     });
 
-    res.json(feed);
+    res.header("Content-Type", "text/csv");
+    res.send(csv);
   } catch (err) {
     console.error("Meta feed error:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).send("Feed error");
   }
 });
 
