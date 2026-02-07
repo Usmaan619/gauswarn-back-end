@@ -16,6 +16,7 @@ const {
 } = require("./controllers/users/gauswarn/excelController");
 const fs = require("fs");
 const { connectToDatabase } = require("./config/dbConnection");
+const metaFeedRoute = require("./routes/users/gauswarn/metaFeed");
 
 // Middlewares
 app.use(cors());
@@ -31,7 +32,7 @@ app.use(
     origin: "*", // Replace with your frontend URL
     methods: ["GET", "POST", "PUT", "DELETE"], // Allowed methods
     credentials: true, // If you need to allow credentials (e.g., cookies)
-  })
+  }),
 );
 
 // Routes
@@ -40,6 +41,8 @@ app.use("/users", usersRoutes);
 app.use("/admin", adminRoutes);
 
 app.use("/rajlaxmi", rajlaxmiRoutes);
+
+app.use("/", metaFeedRoute);
 
 // Error handling middleware
 app.use(errorHandler);
