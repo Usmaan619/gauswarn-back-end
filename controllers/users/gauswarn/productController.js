@@ -1,5 +1,8 @@
 const productModel = require("../../../model/users/gauswarn/productModal");
-const { uploadProductImage, deleteFromS3 } = require("../../../service/uploadFile");
+const {
+  uploadProductImage,
+  deleteFromS3,
+} = require("../../../service/uploadFile");
 
 // Add Product
 exports.addProduct = async (req, res) => {
@@ -11,6 +14,7 @@ exports.addProduct = async (req, res) => {
       product_weight,
       product_purchase_price,
       product_del_price,
+      product_images,
     } = req.body;
 
     if (
@@ -19,7 +23,8 @@ exports.addProduct = async (req, res) => {
       !product_price ||
       !product_weight ||
       !product_purchase_price ||
-      !product_del_price
+      !product_del_price ||
+      !product_images
     ) {
       return res.status(400).json({ message: "All fields are required" });
     }
@@ -30,7 +35,8 @@ exports.addProduct = async (req, res) => {
       product_price,
       product_weight,
       product_purchase_price,
-      product_del_price
+      product_del_price,
+      product_images,
     );
 
     res.status(201).json({
@@ -90,7 +96,7 @@ exports.updateProduct = async (req, res) => {
       product_price,
       product_weight,
       product_purchase_price,
-      product_del_price
+      product_del_price,
     );
 
     if (!isUpdated) {
@@ -138,7 +144,7 @@ exports.updateProductPrices = async (req, res) => {
       product_price,
       product_purchase_price,
       product_del_price,
-      product_weight
+      product_weight,
     );
 
     if (!isUpdated) {
@@ -175,7 +181,7 @@ exports.addProductNew = async (req, res) => {
       const uploadedUrl = await uploadProductImage(
         file.buffer,
         file.mimetype,
-        product_id
+        product_id,
       );
       images.push(uploadedUrl);
     }
@@ -187,7 +193,7 @@ exports.addProductNew = async (req, res) => {
       product_weight,
       product_purchase_price,
       product_del_price,
-      JSON.stringify(images)
+      JSON.stringify(images),
     );
 
     res.json({
@@ -227,7 +233,7 @@ exports.updateProductNew = async (req, res) => {
       const newUrl = await uploadProductImage(
         req.file.buffer,
         req.file.mimetype,
-        product_id
+        product_id,
       );
 
       images[replace_index] = newUrl; // replace only this image
@@ -240,7 +246,7 @@ exports.updateProductNew = async (req, res) => {
       product_purchase_price,
       product_del_price,
       JSON.stringify(images),
-      product_id
+      product_id,
     );
 
     res.json({
@@ -289,7 +295,6 @@ exports.updateProductNew = async (req, res) => {
 //   }
 // };
 
-
 exports.addProductImages = async (req, res) => {
   try {
     const { product_id } = req.body;
@@ -304,7 +309,7 @@ exports.addProductImages = async (req, res) => {
 
     // 1) Upload NEW IMAGES parallelly
     const uploadPromises = req.files.map((file) =>
-      uploadProductImage(file.buffer, file.mimetype, product_id)
+      uploadProductImage(file.buffer, file.mimetype, product_id),
     );
 
     const newImages = await Promise.all(uploadPromises);
@@ -323,7 +328,7 @@ exports.addProductImages = async (req, res) => {
     // 4) Update DB
     await productModel.updateProductImages(
       product_id,
-      JSON.stringify(finalImages)
+      JSON.stringify(finalImages),
     );
 
     res.json({
@@ -336,7 +341,6 @@ exports.addProductImages = async (req, res) => {
     res.status(500).json({ error: "Upload failed" });
   }
 };
-
 
 exports.replaceProductImage = async (req, res) => {
   try {
@@ -352,7 +356,7 @@ exports.replaceProductImage = async (req, res) => {
     const newURL = await uploadProductImage(
       req.file.buffer,
       req.file.mimetype,
-      product_id
+      product_id,
     );
 
     images[replace_index] = newURL;

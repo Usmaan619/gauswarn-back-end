@@ -8,14 +8,14 @@ exports.addProduct = async (
   product_weight,
   product_purchase_price,
   product_del_price,
-  product_images
+  product_images,
 ) => {
   try {
     return await withConnection(async (connection) => {
       const query = `
         INSERT INTO gauswarn_product 
         (product_id, product_name, product_price, product_weight, product_purchase_price, product_del_price, product_images)
-        VALUES (?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
       `;
       const [result] = await connection.execute(query, [
         product_id,
@@ -67,7 +67,7 @@ exports.updateProduct = async (
   product_weight,
   product_purchase_price,
   product_del_price,
-  product_images
+  product_images,
 ) => {
   try {
     return await withConnection(async (connection) => {
@@ -121,7 +121,7 @@ exports.updateProductPrices = async (
   product_price,
   product_purchase_price,
   product_del_price,
-  product_weight
+  product_weight,
 ) => {
   try {
     return await withConnection(async (connection) => {
