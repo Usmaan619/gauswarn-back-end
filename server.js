@@ -17,6 +17,7 @@ const {
 const fs = require("fs");
 const { connectToDatabase } = require("./config/dbConnection");
 const metaFeedRoute = require("./routes/users/gauswarn/metaFeed");
+const { default: axios } = require("axios");
 
 // Middlewares
 app.use(cors());
@@ -43,6 +44,36 @@ app.use("/admin", adminRoutes);
 app.use("/rajlaxmi", rajlaxmiRoutes);
 
 app.use("/", metaFeedRoute);
+
+app.get("/api/branded-content", async (req, res) => {
+  try {
+    const response = await axios.get(
+      "https://graph.facebook.com/v25.0/branded_content_search",
+      {
+        params: {
+          ig_username: "gauswarn", // required OR page_url
+          creation_date_min: "2024-01-01",
+          creation_date_max: "2026-01-01",
+          access_token: process.env.FB_TOKEN,
+        },
+        timeout: 5000,
+      },
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: response.data,
+    });
+  } catch (error) {
+    console.error("Facebook API Error:", error.response?.data || error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch branded content",
+      error: error.response?.data || "Internal Server Error",
+    });
+  }
+});
 
 // Error handling middleware
 app.use(errorHandler);
