@@ -12,6 +12,7 @@ const loginController = require("../../controllers/admin/loginController");
 const forgotPasswordController = require("../../controllers/admin/forgotPasswordController");
 const userInfoController = require("../../controllers/admin/userInfoController");
 const monthlyReportController = require("../../controllers/admin/monthlyReportController");
+const dashboardController = require("../../controllers/admin/dashboardController");
 
 // Rajlaxmi
 const productControllerRajlaxmi = require("../../controllers/users/rajlaxmi/productController");
@@ -87,6 +88,12 @@ router.post(
   "/getAllSales",
   authMiddleware,
   monthlyReportController.getAllSales
+);
+
+router.get(
+  "/dashboardCounts",
+  authMiddleware,
+  dashboardController.getDashboardCounts
 );
 
 router.post(
