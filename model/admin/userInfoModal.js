@@ -71,7 +71,7 @@ exports.getAllOrderDetails = async () => {
           DATE, 
           TIME 
          FROM gauswarn_payment
-        ORDER BY id ASC;
+        ORDER BY date DESC, time DESC;
       `;
 
       const [rows] = await connection.execute(query);
