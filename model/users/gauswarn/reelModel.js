@@ -98,7 +98,7 @@ exports.deleteReel = async (id) => {
   return withConnection(async (connection) => {
     await connection.execute(
       "DELETE FROM gauswarn_reels_instagram WHERE id = ?",
-      [id]
+      [id],
     );
     return true;
   });

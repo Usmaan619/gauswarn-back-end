@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const usersRoutes = require("./routes/users/gauswarn/usersRoutes");
 const adminRoutes = require("./routes/admin/adminRoutes");
 const rajlaxmiRoutes = require("./routes/users/rajlaxmi/rajlaxmiRoutes");
+const visitorRoutes = require("./routes/users/gauswarn/visitorRoutes");
 const { errorHandler } = require("./middlewares/errorHandler");
 const dotenv = require("dotenv");
 dotenv.config();
@@ -44,6 +45,8 @@ app.use("/admin", adminRoutes);
 app.use("/rajlaxmi", rajlaxmiRoutes);
 
 app.use("/", metaFeedRoute);
+
+app.use("/api", visitorRoutes);
 
 app.get("/api/branded-content", async (req, res) => {
   try {
