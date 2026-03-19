@@ -83,4 +83,47 @@ const trackVisitor = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { trackVisitor };
+const listVisitors = async (req, res) => {
+  try {
+    const visitors = await getAllVisitors();
+    res.json({ success: true, visitors });
+  } catch (error) {
+    console.error("Error fetching visitors:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+const deleteVisitor = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await withConnection(async (connection) => {
+      await connection.query("DELETE FROM website_visitors WHERE id = ?", [id]);
+    });
+    res.json({ success: true, message: "Visitor deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting visitor:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+const clearAllVisitors = async (req, res) => {
+  try {
+    await withConnection(async (connection) => {
+      await connection.query("DELETE FROM website_visitors");
+    });
+    res.json({ success: true, message: "All visitors cleared successfully" });
+  } catch (error) {
+    console.error("Error clearing visitors:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+const getAllVisitors = async () => {
+  return withConnection(async (connection) => {
+    const query = "SELECT * FROM website_visitors ORDER BY id DESC";
+    const [rows] = await connection.execute(query);
+    return rows;
+  });
+};
+
+module.exports = { trackVisitor, listVisitors, deleteVisitor, clearAllVisitors };

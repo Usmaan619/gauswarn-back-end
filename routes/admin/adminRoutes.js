@@ -45,6 +45,9 @@ const newsletterController = require("../../controllers/users/gauswarn/newslette
 
 const topBannerOfferController = require("../../controllers/users/gauswarn/topBannerOfferController");
 
+const youtubeController = require("../../controllers/users/gauswarn/youtubeController");
+const visitorController = require("../../controllers/users/gauswarn/visitorController");
+
 // ----------------------------
 // Admin Routes
 // ----------------------------
@@ -58,7 +61,7 @@ router.post("/verifyOtp", forgotPasswordController.verifyOtp);
 router.get(
   "/getAllGauswarnUsers",
   authMiddleware,
-  registerController.getAllGauswarnUsers
+  registerController.getAllGauswarnUsers,
 );
 
 // update user
@@ -71,34 +74,34 @@ router.delete("/deleteUser/:id", registerController.deleteUser);
 router.get(
   "/getAllCustomer",
   authMiddleware,
-  userInfoController.getAllUserInfo
+  userInfoController.getAllUserInfo,
 );
 router.get(
   "/getAllOrderDetails",
   authMiddleware,
-  userInfoController.getAllOrderDetails
+  userInfoController.getAllOrderDetails,
 );
 router.post(
   "/updateOrderStatus/:id",
   authMiddleware,
-  userInfoController.updateOrderStatus
+  userInfoController.updateOrderStatus,
 );
 
 router.post(
   "/getAllSales",
   authMiddleware,
-  monthlyReportController.getAllSales
+  monthlyReportController.getAllSales,
 );
 
 router.get(
   "/dashboardCounts",
   authMiddleware,
-  dashboardController.getDashboardCounts
+  dashboardController.getDashboardCounts,
 );
 
 router.post(
   "/getAllSalesRajlaxmi",
-  monthlyReportController.getAllSalesRajlaxmi
+  monthlyReportController.getAllSalesRajlaxmi,
 );
 
 // ----------------------------
@@ -113,16 +116,16 @@ router.post("/createProductRajlaxmi", productControllerRajlaxmi.addProduct);
 router.post("/updateProductById", productControllerRajlaxmi.updateProduct);
 router.post(
   "/deleteProductRajlaxmiById/:product_id",
-  productControllerRajlaxmi.deleteProduct
+  productControllerRajlaxmi.deleteProduct,
 );
 router.get(
   "/getAllProductsWithFeedback",
-  productControllerRajlaxmi.getAllProductsWithFeedback
+  productControllerRajlaxmi.getAllProductsWithFeedback,
 );
 router.get("/getAllProductsRajlaxmi", productControllerRajlaxmi.getAllProducts);
 router.delete(
   "/deleteProductsRajlaxmiById/:product_id",
-  productControllerRajlaxmi.deleteProduct
+  productControllerRajlaxmi.deleteProduct,
 );
 
 // orders
@@ -136,15 +139,15 @@ router.post("/createFeedbackRajlaxmi", feedbackRajlaxmiController.createReview);
 router.get("/getAllFeedbackRajlaxmi", feedbackRajlaxmiController.getAllReviews);
 router.get(
   "/getSingleFeedbackRajlaxmiById/:id",
-  feedbackRajlaxmiController.getReviewById
+  feedbackRajlaxmiController.getReviewById,
 );
 router.put(
   "/updateFeedbackRajlaxmiById/:id",
-  feedbackRajlaxmiController.updateReview
+  feedbackRajlaxmiController.updateReview,
 );
 router.delete(
   "/deleteFeedbackRajlaxmiById/:id",
-  feedbackRajlaxmiController.deleteReview
+  feedbackRajlaxmiController.deleteReview,
 );
 
 // Contact
@@ -152,15 +155,15 @@ router.post("/createContactRajlaxmi", contactControllerRajlaxmi.createContact);
 router.get("/getAllContactRajlaxmi", contactControllerRajlaxmi.getAllContacts);
 router.get(
   "/getSingleContactRajlaxmiById/:id",
-  contactControllerRajlaxmi.getContactById
+  contactControllerRajlaxmi.getContactById,
 );
 router.put(
   "/updateContactRajlaxmiById/:id",
-  contactControllerRajlaxmi.updateContact
+  contactControllerRajlaxmi.updateContact,
 );
 router.delete(
   "/deleteContactRajlaxmiById/:id",
-  contactControllerRajlaxmi.deleteContact
+  contactControllerRajlaxmi.deleteContact,
 );
 
 // ----------------------------
@@ -170,11 +173,11 @@ router.delete(
 router.post("/createProductGauswarn", productControllerGauswarn.addProduct);
 router.post(
   "/updateGauswarnProductById",
-  productControllerGauswarn.updateProductPrices
+  productControllerGauswarn.updateProductPrices,
 );
 router.post(
   "/deleteGauswarnProductById",
-  productControllerGauswarn.deleteProduct
+  productControllerGauswarn.deleteProduct,
 );
 router.get("/gauswarnGetAllProduct", productControllerGauswarn.getAllProducts);
 
@@ -182,27 +185,27 @@ router.get("/gauswarnGetAllProduct", productControllerGauswarn.getAllProducts);
 router.get(
   "/allfeedback",
   authMiddleware,
-  feedbackGauswarnController.getReviews
+  feedbackGauswarnController.getReviews,
 );
 router.post(
   "/createFeedback",
   authMiddleware,
-  feedbackGauswarnController.feedback
+  feedbackGauswarnController.feedback,
 );
 router.post(
   "/getSingleFeedbackById/:id",
   authMiddleware,
-  feedbackGauswarnController.getReviewById
+  feedbackGauswarnController.getReviewById,
 );
 router.put(
   "/updateFeedbackById/:id",
   authMiddleware,
-  feedbackGauswarnController.updateReviewById
+  feedbackGauswarnController.updateReviewById,
 );
 router.delete(
   "/deleteFeedbackById/:id",
   authMiddleware,
-  feedbackGauswarnController.deleteReviewById
+  feedbackGauswarnController.deleteReviewById,
 );
 
 // Image and Video upload
@@ -215,26 +218,26 @@ router.post("/base64", imageUploadControllerGauswarn.uploadMedia);
 router.post(
   "/imageUpload",
   upload.single("file"),
-  imageUploadControllerGauswarn.uploadMedia
+  imageUploadControllerGauswarn.uploadMedia,
 );
 
 // Multiple file
 router.post(
   "/files",
   upload.array("files"),
-  imageUploadControllerGauswarn.uploadMedia
+  imageUploadControllerGauswarn.uploadMedia,
 );
 
 router.post(
   "/add-images",
   upload.array("images", 10),
-  productControllerGauswarn.addProductImages
+  productControllerGauswarn.addProductImages,
 );
 
 router.post(
   "/replace-image",
   upload.single("image"),
-  productControllerGauswarn.replaceProductImage
+  productControllerGauswarn.replaceProductImage,
 );
 
 router.post("/banner-signature", homeBannerControllerGauswarn.getSignature);
@@ -244,14 +247,14 @@ router.get("/home-banners", homeBannerControllerGauswarn.getHomeBanners);
 
 router.post(
   "/home-banners-url",
-  homeBannerControllerGauswarn.updateHomeBannerByUrl
+  homeBannerControllerGauswarn.updateHomeBannerByUrl,
 );
 
 // POST all 4 banners
 router.post(
   "/home-banners-images",
   upload.single("banner"),
-  homeBannerControllerGauswarn.updateHomeBanner
+  homeBannerControllerGauswarn.updateHomeBanner,
 );
 // upload reels
 router.post("/reels", reelControllerGauswarn.createReel); // add
@@ -268,13 +271,13 @@ router.post(
     console.log("DEBUG FILE:", req.file);
     next();
   },
-  blogsControllerGauswarn.createBlogController
+  blogsControllerGauswarn.createBlogController,
 );
 // UPDATE BLOG
 router.post(
   "/blogs/update/:id",
   upload.single("image"),
-  blogsControllerGauswarn.updateBlogController
+  blogsControllerGauswarn.updateBlogController,
 );
 
 // GET ALL
@@ -308,7 +311,7 @@ router.get("/getNewsletter", newsletterController.getNewsletter);
 router.post("/createNewsletter", newsletterController.createNewsletter);
 router.post(
   "/updateNewsletterStatus/:id",
-  newsletterController.updateNewsletterStatus
+  newsletterController.updateNewsletterStatus,
 );
 router.delete("/deleteNewsletter/:id", newsletterController.deleteNewsletter);
 
@@ -317,11 +320,21 @@ router.delete("/deleteNewsletter/:id", newsletterController.deleteNewsletter);
 router.get("/getAllOffer", topBannerOfferController.getOffersController);
 router.post("/updateOffer", topBannerOfferController.updateOffersController);
 
+// youtube shorts
+router.post("/shorts", youtubeController.createYoutubeShort); // delete
+router.get("/shorts/all", youtubeController.listYoutubeShorts); // delete
+router.delete("/shorts-delete/:id", youtubeController.deleteYoutubeShortById); // delete
+
+// ** Visitor Tracking **
+router.get("/list-visitors", authMiddleware, visitorController.listVisitors);
+router.delete("/delete-visitor/:id", authMiddleware, visitorController.deleteVisitor);
+router.delete("/clear-visitors", authMiddleware, visitorController.clearAllVisitors);
+
 // Contact (auth-protected)
 router.get(
   "/getAllContact",
   authMiddleware,
-  contactControllerGauswarn.getAllContact
+  contactControllerGauswarn.getAllContact,
 );
 
 // ----------------------------
