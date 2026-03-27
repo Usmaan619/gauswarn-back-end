@@ -47,6 +47,7 @@ const topBannerOfferController = require("../../controllers/users/gauswarn/topBa
 
 const youtubeController = require("../../controllers/users/gauswarn/youtubeController");
 const visitorController = require("../../controllers/users/gauswarn/visitorController");
+const couponAdminController = require("../../controllers/admin/couponAdminController");
 
 // ----------------------------
 // Admin Routes
@@ -336,6 +337,14 @@ router.get(
   authMiddleware,
   contactControllerGauswarn.getAllContact,
 );
+
+// ----------------------------
+// Coupon Admin Routes
+// ----------------------------
+router.get("/coupons", authMiddleware, couponAdminController.listAllCoupons);
+router.post("/coupons", authMiddleware, couponAdminController.createCoupon);
+router.put("/coupons/:id", authMiddleware, couponAdminController.updateCoupon);
+router.delete("/coupons/:id", authMiddleware, couponAdminController.deleteCoupon);
 
 // ----------------------------
 // Global Error Handler

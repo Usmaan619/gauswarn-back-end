@@ -11,4 +11,5 @@ router.post("/track-visitor", trackVisitor);
 router.get("/list-visitors", listVisitors);
 router.delete("/delete-visitor/:id", deleteVisitor);
 router.delete("/clear-visitors", clearAllVisitors);
+
 module.exports = router;

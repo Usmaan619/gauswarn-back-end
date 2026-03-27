@@ -27,6 +27,9 @@ const {
   updateInquiry,
   deleteInquiry,
 } = require("../../../controllers/users/gauswarn/b2bInquiryController");
+const {
+  applyCoupon,
+} = require("../../../controllers/users/gauswarn/couponController");
 
 // User Add to cart
 router.post("/login/addtocart", cartController.addToCart);
@@ -78,6 +81,9 @@ router.delete("/deleteb2bInquiry/:id", deleteInquiry);
 // phonePe routes
 // router.post("/create-order", createPaymentAndGenerateUrl);
 // router.post("/status", getPhonePeUrlStatusAndUpdatePayment);
+
+// coupon apply
+router.post("/coupons/apply", applyCoupon);
 
 // razorpay
 router.post("/create-order", createPaymentAndGenerateUrlRazor);

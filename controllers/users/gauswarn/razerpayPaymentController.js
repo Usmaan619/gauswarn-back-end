@@ -5,6 +5,7 @@ const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const moment = require("moment");
 const { withConnection } = require("../../../utils/helper");
+const couponModel = require("../../../model/coupons/couponModel");
 
 /* =============================
    RAZORPAY INSTANCE
@@ -137,9 +138,10 @@ const savePaymentDetails = async (userData, shopmozoOrderId, cart = []) => {
       user_name, user_mobile_num, user_email, user_state, user_city,
       user_country, user_house_number, user_landmark, user_pincode,
       user_total_amount, purchase_price, product_quantity,
-      date, time, shopmozo_order_id, status, isPaymentPaid, cart_data
+      date, time, shopmozo_order_id, status, isPaymentPaid, cart_data,
+      coupon_code, discount_amount, final_payable_amount
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', false, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', false, ?, ?, ?, ?)
   `;
 
   const [result] = await withConnection((conn) =>
@@ -160,6 +162,9 @@ const savePaymentDetails = async (userData, shopmozoOrderId, cart = []) => {
       time,
       shopmozoOrderId,
       JSON.stringify(cart), // Store full cart data
+      userData.coupon_code || null,
+      userData.discount_amount || 0,
+      userData.final_payable_amount || userData.user_total_amount,
     ]),
   );
 
@@ -213,13 +218,15 @@ const createPaymentAndGenerateUrlRazor = async (req, res) => {
     // Input validation
     validatePaymentInput(userData);
 
-    const amountInPaise = Number(userData.user_total_amount) * 100;
+    // Use discounted amount if provided
+    const chargeAmount = userData.final_payable_amount || userData.user_total_amount;
+    const amountInPaise = Number(chargeAmount) * 100;
 
     console.log(
       "🛒 Payment initiation for:",
       userData.user_name,
-      "Amount: ₹",
-      userData.user_total_amount,
+      "Final Amount: ₹",
+      chargeAmount,
     );
 
     /* 1️⃣ SAVE TO DB (temporary order id) */
@@ -242,6 +249,8 @@ const createPaymentAndGenerateUrlRazor = async (req, res) => {
         user_email: userData.user_email,
         user_mobile_num: userData.user_mobile_num,
         cart: userData.cart || [],
+        coupon_code: userData.coupon_code || null,
+        discount_amount: userData.discount_amount || 0,
       },
     });
 
@@ -428,6 +437,19 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
         ],
       ),
     );
+    
+    // Increment coupon used_count if payment successful
+    if (isPaid && notes.coupon_code) {
+      try {
+        const coupon = await couponModel.findCouponByCode(notes.coupon_code);
+        if (coupon) {
+          await couponModel.incrementUsedCount(coupon.id);
+          console.log(`✅ Coupon ${notes.coupon_code} usage count incremented.`);
+        }
+      } catch (couponErr) {
+        console.error("❌ Failed to increment coupon count:", couponErr);
+      }
+    }
 
     // WhatsApp notification
     if (isPaid && notes.user_mobile_num) {
