@@ -97,6 +97,7 @@ exports.updateProduct = async (req, res) => {
       product_weight,
       product_purchase_price,
       product_del_price,
+      null, // product_images (not being updated here)
     );
 
     if (!isUpdated) {
@@ -240,13 +241,13 @@ exports.updateProductNew = async (req, res) => {
     }
 
     await productModel.updateProduct(
+      product_id,
       product_name,
       product_price,
       product_weight,
       product_purchase_price,
       product_del_price,
       JSON.stringify(images),
-      product_id,
     );
 
     res.json({
@@ -315,11 +316,20 @@ exports.addProductImages = async (req, res) => {
     const newImages = await Promise.all(uploadPromises);
 
     // 2) Get OLD IMAGES from DB
-    const product = await productModel.getProductById(product_id);
+    const product = await productModel.getProductByProductId(product_id);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
 
     let oldImages = [];
     if (product.product_images) {
-      oldImages = JSON.parse(product.product_images);
+      try {
+        oldImages = JSON.parse(product.product_images);
+      } catch (e) {
+        console.error("Error parsing product images:", e);
+        oldImages = [];
+      }
     }
 
     // 3) Append NEW + OLD images
