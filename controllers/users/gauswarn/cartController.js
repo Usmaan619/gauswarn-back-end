@@ -181,11 +181,6 @@ exports.removeFromCart = asyncHandler(async (req, res) => {
     return res.status(201).json({ success: true, message: cartItems?.message });
   } catch (error) {
     // Catch any errors and send an appropriate response
-    console.error(
-      "Error while adding to cart:removeFromCart",
-      error,
-      moment().format("MMMM Do YYYY, h:mm:ss a")
-    );
     return res.json({
       message: "Server error, failed to add to cart",
       error,

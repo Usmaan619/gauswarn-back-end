@@ -9,13 +9,12 @@ const dbConfig = {
   port: process.env.DB_PORT,
 };
 
-console.log("dbConfig:----------- ", dbConfig);
+
 async function connectToDatabase() {
   try {
     const connection = await mysql.createConnection(dbConfig);
     return connection;
   } catch (err) {
-    console.error("Error connecting to MySQL:----------", err);
     process.exit(1);
   }
 }

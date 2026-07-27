@@ -36,7 +36,6 @@ exports.createAddress = async (data) => {
       return result.insertId;
     });
   } catch (error) {
-    console.error("DB Create Address Error:", error.message);
     throw error;
   }
 };
@@ -50,7 +49,6 @@ exports.getAllAddresses = async () => {
       return rows;
     });
   } catch (error) {
-    console.error("DB Get All Addresses Error:", error.message);
     throw error;
   }
 };
@@ -65,7 +63,6 @@ exports.getAddressById = async (id) => {
       return rows[0] || null;
     });
   } catch (error) {
-    console.error("DB Get Address By ID Error:", error.message);
     throw error;
   }
 };
@@ -108,7 +105,6 @@ exports.updateAddress = async (id, data) => {
       return result.affectedRows;
     });
   } catch (error) {
-    console.error("DB Update Address Error:", error.message);
     throw error;
   }
 };
@@ -123,7 +119,6 @@ exports.deleteAddress = async (id) => {
       return result.affectedRows;
     });
   } catch (error) {
-    console.error("DB Delete Address Error:", error.message);
     throw error;
   }
 };

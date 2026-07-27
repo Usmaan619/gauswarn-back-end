@@ -24,7 +24,6 @@ exports.createYoutubeShort = async (req, res) => {
 
     res.json({ success: true, id });
   } catch (e) {
-    console.error("error: ", e);
     res.status(500).json({ success: false, message: e.message });
   }
 };

@@ -63,7 +63,6 @@ exports.userRegister = asyncHandler(async (req, res, next) => {
       .status(201)
       .json({ success: true, message: "User registered successfully" });
   } catch (error) {
-    console.error("Database error:", error);
     res.status(500).json({ message: "Database error", error: error.message });
   }
 });

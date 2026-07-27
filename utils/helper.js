@@ -16,7 +16,6 @@ const createEmailTransporter = async () => {
       },
     });
   } catch (error) {
-    console.log("error:createEmailTransporter ", error);
     throw error;
   }
 };
@@ -37,7 +36,6 @@ const withConnection = async (callback) => {
   try {
     return await callback(connection);
   } catch (err) {
-    console.error("Error in withConnection:---------------------", err);
     connection.destroy(); // Destroy the connection if an error occurs
     throw err; // Rethrow the error for higher-level handling
   } finally {

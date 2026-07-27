@@ -254,7 +254,6 @@ const getPhonePeUrlStatusAndUpdatePayment = async (req, res) => {
       return res.redirect(process.env.REDIRECT_URL_TO_FAILURE_PAGE);
     }
   } catch (err) {
-    console.error(
       "Error fetching PhonePe status or updating database:",
       err.message
     );

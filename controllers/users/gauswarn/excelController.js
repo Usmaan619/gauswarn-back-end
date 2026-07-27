@@ -52,12 +52,10 @@ async function exportTableToExcel(tableName) {
 
       XLSX.writeFile(workbook, filePath);
 
-      console.log(`Excel file created successfully: ${filePath}`);
 
       return filePath; // Return the file path
     });
   } catch (error) {
-    console.error("Error exporting table to Excel:", error.message);
     throw error;
   }
 }

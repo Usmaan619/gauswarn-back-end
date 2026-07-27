@@ -16,9 +16,7 @@ const forgotPassword = async (otp) => {
     const connection = await connectToDatabase();
     const query = `INSERT INTO rajlaxmi_user (otp) VALUES (?)`;
     await connection.execute(query, [otp]);
-    console.log("OTP stored successfully");
   } catch (error) {
-    console.log("Error storing OTP in database:", error);
     throw error;
   }
 };
@@ -39,13 +37,11 @@ exports.sendOTPEmail = async (to, hostname) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log("info:", info);
 
     await forgotPassword(otp);
 
     return otp;
   } catch (error) {
-    console.log("Error sending OTP email:", error);
     throw error;
   }
 };
@@ -57,7 +53,6 @@ exports.findUserByEmail = async (user_email) => {
     const [rows] = await connection.execute(query, [user_email]);
     return rows[0] || null;
   } catch (error) {
-    console.log("Error ", error);
     return error;
   }
 };
@@ -69,7 +64,6 @@ exports.findUserOTP = async (otp) => {
     const [rows] = await connection.execute(query, [otp]);
     return rows[0] || null;
   } catch (error) {
-    console.log("error: ", error);
     throw error;
   }
 };
@@ -85,7 +79,6 @@ exports.resetPassword = async (user_email, hashedPassword) => {
   }
   try {
   } catch (error) {
-    console.log("Error :", error);
     throw error;
   }
 };

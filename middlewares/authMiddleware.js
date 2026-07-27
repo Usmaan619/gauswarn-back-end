@@ -6,23 +6,35 @@ exports.authMiddleware = (req, res, next) => {
   try {
     const token = req.headers["authorization"] || req.headers["Authorization"];
 
-    if (!token)
-      return res.json({
+    if (!token) {
+      return res.status(401).json({
         success: false,
         message: "Unauthorized: No token provided",
       });
+    }
 
     jwt.verify(token, SECRET_KEY, (err, decoded) => {
-      if (err)
-        return res
-          .status(403)
-          .json({ success: false, message: "Invalid token" });
+      if (err) {
+        // Differentiate between expired and invalid tokens
+        if (err.name === "TokenExpiredError") {
+          return res.status(401).json({
+            success: false,
+            message: "Token expired. Please login again.",
+          });
+        }
+        return res.status(403).json({
+          success: false,
+          message: "Invalid token",
+        });
+      }
 
       req.user = decoded;
       next();
     });
   } catch (error) {
-    console.error("Error in authMiddleware:", error);
-    res.json({ message: error });
+    return res.status(500).json({
+      success: false,
+      message: "Authentication error",
+    });
   }
 };

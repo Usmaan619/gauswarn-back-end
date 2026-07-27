@@ -9,7 +9,6 @@ exports.getDashboardCounts = asyncHandler(async (req, res) => {
       counts
     });
   } catch (error) {
-    console.error("Dashboard counts error:", error);
     res.status(500).json({
       success: false,
       message: "Internal Server Error",

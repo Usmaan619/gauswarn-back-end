@@ -37,7 +37,6 @@ router.get("/meta-feed", async (req, res) => {
     res.header("Content-Type", "text/csv");
     res.send(csv);
   } catch (err) {
-    console.error("Meta feed error:", err);
     res.status(500).send("Feed error");
   }
 });

@@ -71,7 +71,6 @@ exports.applyCoupon = asyncHandler(async (req, res) => {
       message: "Coupon applied successfully!",
     });
   } catch (error) {
-    console.error("Apply coupon error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error.",

@@ -1,74 +1,6 @@
-// const { withConnection } = require("../../utils/helper");
-
 const { withConnection } = require("../../utils/helper");
 
-// exports.findAdminUserByEmail = async (email) => {
-//   try {
-//     return await withConnection(async (connection) => {
-//       const query = `SELECT * FROM organic_farmer_admin_user WHERE email = ?`;
-//       const [rows] = await connection.execute(query, [email]);
-//       return rows[0] || null;
-//     });
-//   } catch (error) {
-//     console.log("error: ", error);
-//     return error;
-//   }
-// };
-
-// // Registration new user
-// exports.adminUserRegister = async (registerTable) => {
-//   const { full_name, email, mobile_number, password, role } = registerTable;
-
-//   //MySQl query
-//   try {
-//     return await withConnection(async (connection) => {
-//       const query = `INSERT INTO organic_farmer_admin_user (full_name, email, mobile_number, password,role) VALUES (?, ?, ?, ?, ?)`;
-
-//       //Execute the query
-//       const [results] = await connection.execute(query, [
-//         full_name,
-//         email,
-//         mobile_number,
-//         password,
-//         role,
-//       ]);
-//       return results;
-//     });
-//   } catch (error) {
-//     console.log("error: ", error);
-//     return error;
-//   }
-// };
-
-// exports.findUserById = async (uid) => {
-//   try {
-//     return await withConnection(async (connection) => {
-//       const query = `SELECT * FROM rajlaxmi_user WHERE uid = ?`;
-//       const [rows] = await connection.execute(query, [uid]);
-//       return rows[0] || null;
-//     });
-//   } catch (error) {
-//     console.log("error: ", error);
-//     return error;
-//   }
-// };
-
-// exports.getAllUsers = async () => {
-//   try {
-//     return await withConnection(async (connection) => {
-//       const query = `SELECT * FROM rajlaxmi_user`;
-//       const [rows] = await connection.execute(query);
-//       return rows || null;
-//     });
-//   } catch (error) {
-//     console.log("error: ", error);
-//     return error;
-//   }
-// };
-
-// model/admin/registerModel.js
-
-//  Find admin by email (login के लिए)
+//  Find admin by email
 exports.findAdminUserByEmail = async (email) => {
   try {
     return await withConnection(async (connection) => {
@@ -77,7 +9,6 @@ exports.findAdminUserByEmail = async (email) => {
       return rows[0] || null;
     });
   } catch (error) {
-    console.log("findAdminUserByEmail error: ", error);
     throw error;
   }
 };
@@ -101,13 +32,12 @@ exports.adminUserRegister = async (registerTable) => {
         mobile_number,
         password,
         role || "admin",
-        permissions ? JSON.stringify(permissions) : null, // 👈 store as JSON string
+        permissions ? JSON.stringify(permissions) : null,
       ]);
 
       return results;
     });
   } catch (error) {
-    console.log("adminUserRegister error: ", error);
     throw error;
   }
 };
@@ -121,12 +51,11 @@ exports.getAllAdminUsers = async () => {
       return rows || [];
     });
   } catch (error) {
-    console.log("getAllAdminUsers error: ", error);
     throw error;
   }
 };
 
-//  Update admin user (permissions, role, आदि)
+//  Update admin user
 exports.updateAdminUser = async (id, updateData) => {
   const { full_name, email, mobile_number, role, permissions, status } =
     updateData;
@@ -176,7 +105,6 @@ exports.updateAdminUser = async (id, updateData) => {
       return result;
     });
   } catch (error) {
-    console.log("updateAdminUser error: ", error);
     throw error;
   }
 };
@@ -190,7 +118,6 @@ exports.deleteAdminUser = async (id) => {
       return result;
     });
   } catch (error) {
-    console.log("deleteAdminUser error: ", error);
     throw error;
   }
 };
@@ -203,31 +130,35 @@ exports.getAllUsers = async () => {
       return rows || null;
     });
   } catch (error) {
-    console.log("error: ", error);
-    return error;
+    throw error;
   }
 };
 
+// 🔒 FIXED: Parameterized queries — prevents SQL injection
 exports.getAllGauswarnUsers = async ({ search, page, limit }) => {
   return await withConnection(async (connection) => {
     const offset = (page - 1) * limit;
+    const params = [];
 
-    const searchSql = search
-      ? `WHERE full_name LIKE '%${search}%' OR email LIKE '%${search}%' OR mobile_number LIKE '%${search}%'`
-      : "";
+    let searchSql = "";
+    if (search) {
+      searchSql = `WHERE full_name LIKE ? OR email LIKE ? OR mobile_number LIKE ?`;
+      const searchPattern = `%${search}%`;
+      params.push(searchPattern, searchPattern, searchPattern);
+    }
 
     const totalQuery = `SELECT COUNT(*) as total FROM gauswarn_admin_user ${searchSql}`;
-    const [[totalResult]] = await connection.execute(totalQuery);
+    const [[totalResult]] = await connection.execute(totalQuery, params);
 
     const query = `
       SELECT *
       FROM gauswarn_admin_user
       ${searchSql}
-      LIMIT ${limit}
-      OFFSET ${offset}
+      LIMIT ? OFFSET ?
     `;
-
-    const [rows] = await connection.execute(query);
+    // Clone params and add limit/offset as strings (mysql2 execute requires strings)
+    const queryParams = [...params, String(limit), String(offset)];
+    const [rows] = await connection.execute(query, queryParams);
 
     return {
       rows,

@@ -28,7 +28,6 @@ exports.addWishlist = async ({
       };
     });
   } catch (error) {
-    console.error("Error adding to wishlist:", error);
     throw error; // Ensure the error propagates to the controller
   }
 };
@@ -56,7 +55,6 @@ exports.getAllWishlist = async (id) => {
       return rows;
     });
   } catch (error) {
-    console.log("error: ", error);
     throw error;
   }
 };
@@ -101,7 +99,6 @@ exports.removeFromWishlist = async (uid, product_id) => {
       };
     });
   } catch (error) {
-    console.error("Error removing wishlist:", error);
     throw error; // Ensure the error propagates to the calling function
   }
 };

@@ -33,19 +33,13 @@ exports.updateBannerSlot = async (slot, url) => {
       const column = `banner${slot}`;
       const query = `UPDATE gauswarn_home_banners SET ${column} = ? WHERE id = 1`;
 
-      console.log("\n----- SQL DEBUG -----");
-      console.log("QUERY:", query);
-      console.log("VALUE:", url);
 
       const [result] = await connection.execute(query, [url]);
 
-      console.log("SQL RESULT:", result);
-      console.log("---------------------\n");
 
       return result;
     });
   } catch (error) {
-    console.log("Update error:", error);
     throw new Error(error.message);
   }
 };
@@ -79,6 +73,5 @@ exports.ensureHomeBannerRow = async () => {
       }
     });
   } catch (err) {
-    console.log("ensureHomeBannerRow error:", err);
   }
 };

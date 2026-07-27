@@ -36,7 +36,6 @@ exports.uploadMedia = async (req, res) => {
       .status(400)
       .json({ success: false, message: "No file provided" });
   } catch (err) {
-    console.error(err);
     return res.status(500).json({
       success: false,
       message: "Failed to upload file",
@@ -66,7 +65,6 @@ exports.uploadMultiple = async (req, res) => {
 
     res.json({ success: true, files: uploaded });
   } catch (err) {
-    console.log(err);
     res.status(500).json({ error: "Upload failed" });
   }
 };

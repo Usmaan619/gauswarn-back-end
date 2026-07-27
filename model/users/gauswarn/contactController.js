@@ -30,7 +30,6 @@ exports.contact = async (userTable) => {
       return results; // Return query results if needed
     });
   } catch (error) {
-    console.error("Database error:", error); // Log the error for debugging
     throw new Error("Error saving contact information to the database.");
   }
 };

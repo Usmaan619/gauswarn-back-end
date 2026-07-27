@@ -35,7 +35,6 @@ exports.createOrder = asyncHandler(async (req, res) => {
 
     res.status(201).json({ success: true, message: "Order created", id });
   } catch (error) {
-    console.error("Create Order Error:", error);
     throw error;
   }
 });
@@ -45,7 +44,6 @@ exports.getAllOrders = asyncHandler(async (req, res) => {
     const orders = await orderModel.getAllOrders();
     res.status(200).json({ success: true, orders });
   } catch (error) {
-    console.error("Get All Orders Error:", error);
     throw error;
   }
 });
@@ -58,7 +56,6 @@ exports.getOrderById = asyncHandler(async (req, res) => {
     }
     res.status(200).json({ success: true, order });
   } catch (error) {
-    console.error("Get Order by ID Error:", error);
     throw error;
   }
 });
@@ -74,7 +71,6 @@ exports.updateOrder = asyncHandler(async (req, res) => {
 
     res.status(200).json({ success: true, message: "Order updated" });
   } catch (error) {
-    console.error("Update Order Error:", error);
     throw error;
   }
 });
@@ -89,7 +85,6 @@ exports.deleteOrder = asyncHandler(async (req, res) => {
 
     res.status(200).json({ success: true, message: "Order deleted" });
   } catch (error) {
-    console.error("Delete Order Error:", error);
     throw error;
   }
 });

@@ -22,7 +22,6 @@ const getOffersController = async (req, res) => {
       data: offers,
     });
   } catch (error) {
-    console.error("Get offers error:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to fetch offers",
@@ -63,7 +62,6 @@ const updateOffersController = async (req, res) => {
       message: "Offers updated successfully",
     });
   } catch (error) {
-    console.error("Update offers error:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to update offers",

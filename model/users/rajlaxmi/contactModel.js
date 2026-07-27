@@ -19,7 +19,6 @@ exports.userContact = async (contactTable) => {
 
     return results;
   } catch (error) {
-    console.error(" Database Error", error);
     throw error;
   }
 };
@@ -41,7 +40,6 @@ exports.addContact = async (user_name, user_email, user_number, message) => {
       return result.insertId;
     });
   } catch (error) {
-    console.error("Database Error:", error.message);
     throw error;
   }
 };

@@ -90,7 +90,6 @@ exports.deleteFromS3 = async (fileUrl) => {
 
     await cloudinary.uploader.destroy(publicId);
   } catch (err) {
-    console.log("Delete error:", err.message);
   }
 };
 

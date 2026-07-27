@@ -37,7 +37,6 @@ const sendWhatsAppNotification = async (mobile, orderId, amount) => {
     }
     return response.data;
   } catch (error) {
-    console.error("WhatsApp notification failed:", error.message);
     // Don't throw - don't fail payment for WhatsApp issues
   }
 };
@@ -89,7 +88,6 @@ const generateShopmozoOrder = async (userData, cart, date) => {
   };
 
   try {
-    console.log("📦 Creating Shopmozo order...");
     const response = await axios.post(
       "https://shipping-api.com/app/api/v1/push-order",
       payload,
@@ -104,23 +102,17 @@ const generateShopmozoOrder = async (userData, cart, date) => {
         timeout: 10000,
       },
     );
-    console.log(
       "response:--------------------------------------------- ",
       response,
     );
 
     if (response.data?.result === "1") {
-      console.log(" Shopmozo order created:", response.data.data.order_id);
       return response.data.data.order_id;
     } else {
       console.warn("⚠️ Shopmozo rejected:", response.data?.message);
       return payload.order_id; // Fallback to local order ID
     }
   } catch (err) {
-    console.error("===== SHOPMOZO ERROR =====");
-    console.error("Status:", err.response?.status);
-    console.error("Data:", err.response?.data);
-    console.error("=========================");
     return payload.order_id; // Fallback to local order ID
   }
 };
@@ -222,7 +214,6 @@ const createPaymentAndGenerateUrlRazor = async (req, res) => {
     const chargeAmount = userData.final_payable_amount || userData.user_total_amount;
     const amountInPaise = Number(chargeAmount) * 100;
 
-    console.log(
       "🛒 Payment initiation for:",
       userData.user_name,
       "Final Amount: ₹",
@@ -266,7 +257,6 @@ const createPaymentAndGenerateUrlRazor = async (req, res) => {
       { expiresIn: "15m" },
     );
 
-    console.log("Payment order created:", razorpayOrder.id);
 
     res.json({
       success: true,
@@ -277,7 +267,6 @@ const createPaymentAndGenerateUrlRazor = async (req, res) => {
       timestamp: moment().format("MMMM Do YYYY, h:mm:ss a"),
     });
   } catch (err) {
-    console.error("❌ PAYMENT INIT ERROR:", err.message);
     res.status(400).json({
       success: false,
       message: err.message || "Payment initiation failed",
@@ -375,7 +364,6 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
       req.body?.rzpResponse || {};
     const notes = req.body?.notes || {};
 
-    console.log("🔍 Verifying payment:", razorpay_payment_id);
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return res.status(400).json({
@@ -392,7 +380,6 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
       .digest("hex");
 
     if (expectedSignature !== razorpay_signature) {
-      console.error("❌ Invalid signature");
       return res.status(400).json({
         success: false,
         message: "Invalid signature",
@@ -444,10 +431,8 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
         const coupon = await couponModel.findCouponByCode(notes.coupon_code);
         if (coupon) {
           await couponModel.incrementUsedCount(coupon.id);
-          console.log(`✅ Coupon ${notes.coupon_code} usage count incremented.`);
         }
       } catch (couponErr) {
-        console.error("❌ Failed to increment coupon count:", couponErr);
       }
     }
 
@@ -460,7 +445,6 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
       );
     }
 
-    console.log("Payment verification:", payment.status);
 
     res.json({
       success: isPaid,
@@ -469,7 +453,6 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
       shopmozo_order_id: shopmozoOrderId,
     });
   } catch (err) {
-    console.error("❌ VERIFY ERROR:", err);
     res.status(500).json({
       success: false,
       message: "Verification failed",
@@ -568,7 +551,6 @@ const checkRazorpayPaymentStatus = async (req, res) => {
       captured: payment.captured,
     });
   } catch (err) {
-    console.error("Payment status check failed:", err.message);
     res.status(404).json({
       success: false,
       message: "Payment not found",

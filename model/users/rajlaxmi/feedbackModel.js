@@ -24,7 +24,6 @@ exports.addReview = async (
       return result.insertId;
     });
   } catch (error) {
-    console.error("Database Error:", error.message);
     throw error;
   }
 };

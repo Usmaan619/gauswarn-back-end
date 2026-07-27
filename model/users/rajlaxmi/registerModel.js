@@ -10,7 +10,6 @@ exports.findUserByUid = async (uid) => {
       return rows[0] || null;
     });
   } catch (error) {
-    console.log("error: ", error);
     return error;
   }
 };
@@ -23,7 +22,6 @@ exports.findUserByEmail = async (email) => {
       return rows[0] || null;
     });
   } catch (error) {
-    console.log("error: ", error);
     return error;
   }
 };
@@ -37,13 +35,11 @@ exports.findUserByPhone = async (mobileNumber) => {
       const [rows] = await connection.execute(query, [mobileNumber]);
 
       if (!rows.length) {
-        console.log("No user found with this mobile number.");
         return null;
       }
       return rows[0];
     });
   } catch (error) {
-    console.error("Database error in findUserByPhone:", error);
     throw new Error("Database query failed");
   }
 };
@@ -77,7 +73,6 @@ exports.registerUser = async (userData) => {
       return results;
     });
   } catch (error) {
-    console.error("Database error in registerUser:", error);
     throw new Error("Database query failed");
   }
 };
@@ -91,7 +86,6 @@ exports.findUserByid = async (id) => {
       return rows[0] || null;
     });
   } catch (error) {
-    console.log("error: ", error);
     return error;
   }
 };

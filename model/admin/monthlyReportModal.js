@@ -109,8 +109,6 @@ exports.getFilteredPaymentData = async (filterType, month, year) => {
       // Profit calculation
       let totalProfit = 0;
       for (const row of profitRawRows) {
-        console.log("row.product_quantity: ", row.product_quantity);
-        console.log("row.purchase_price: ", row.purchase_price);
         totalProfit += calculateProfit(
           row.user_total_amount,
           row.purchase_price,
@@ -132,7 +130,6 @@ exports.getFilteredPaymentData = async (filterType, month, year) => {
       };
     });
   } catch (error) {
-    console.error("Error in getFilteredPaymentData:", error);
     throw error;
   }
 };
@@ -384,7 +381,6 @@ exports.getFilteredPaymentDataRajlaxmi = async (filterType, month, year) => {
       };
     });
   } catch (error) {
-    console.error("Error in getFilteredPaymentData:", error);
     throw error;
   }
 };

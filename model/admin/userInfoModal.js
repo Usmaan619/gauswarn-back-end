@@ -26,7 +26,6 @@ exports.getAllUserInfo = async () => {
       return rows;
     });
   } catch (error) {
-    console.error("Error in getAllUserInfo:", error);
     throw error;
   }
 };
@@ -78,7 +77,6 @@ exports.getAllOrderDetails = async () => {
       return rows;
     });
   } catch (error) {
-    console.error("Error in getAllOrderDetails:", error);
     throw error;
   }
 };

@@ -46,7 +46,6 @@ exports.addProduct = async (productData) => {
       return result.insertId;
     });
   } catch (error) {
-    console.log("=====error: ", error);
     throw new Error(error.message);
   }
 };

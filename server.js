@@ -21,19 +21,29 @@ const metaFeedRoute = require("./routes/users/gauswarn/metaFeed");
 const { default: axios } = require("axios");
 
 // Middlewares
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// app.use(bodyParser.json({ limit: "700mb" }));
 
-// app.use(bodyParser.urlencoded({ limit: "700mb", extended: true }));
-
-// Allow specific origins or all origins
+// 🔒 CORS — only allow your frontend domains
+const allowedOrigins = [
+  "https://admin.gauswarn.com",
+  "https://gauswarn.com",
+  "https://www.gauswarn.com",
+  "http://localhost:3000",
+  "http://localhost:3001",
+];
 app.use(
   cors({
-    origin: "*", // Replace with your frontend URL
-    methods: ["GET", "POST", "PUT", "DELETE"], // Allowed methods
-    credentials: true, // If you need to allow credentials (e.g., cookies)
+    origin: function (origin, callback) {
+      // Allow requests with no origin (mobile apps, curl, etc in dev)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
   }),
 );
 
@@ -68,7 +78,7 @@ app.get("/api/branded-content", async (req, res) => {
       data: response.data,
     });
   } catch (error) {
-    console.error("Facebook API Error:", error.response?.data || error.message);
+    // Error logged silently
 
     return res.status(500).json({
       success: false,
@@ -89,7 +99,6 @@ async function startServer() {
       console.log(`Server running on port ${port}`);
     });
   } catch (err) {
-    console.error("Failed to start server:", err);
     process.exit(1);
   }
 }
@@ -108,7 +117,6 @@ app.get("/download/:tableName", async (req, res) => {
     // Send the file for download
     res.download(filePath, `${tableName}.csv`, (err) => {
       if (err) {
-        console.error("Error sending file:", err.message);
         res.status(500).send("Error downloading the file.");
       }
 
@@ -118,7 +126,6 @@ app.get("/download/:tableName", async (req, res) => {
       });
     });
   } catch (error) {
-    console.error("Error exporting the table to Excel:", error);
     res.status(500).send("Error exporting the table to Excel.");
   }
 });

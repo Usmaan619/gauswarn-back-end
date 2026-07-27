@@ -151,7 +151,6 @@ const createPaymentAndGenerateUrl = async (req, res) => {
       date: moment().format("MMMM Do YYYY, h:mm:ss a"),
     });
   } catch (error) {
-    console.error("Error in createPaymentAndGenerateUrl:", error);
     res
       .status(500)
       .json({
@@ -210,7 +209,6 @@ const getPhonePeUrlStatusAndUpdatePayment = async (req, res) => {
       : process.env.REDIRECT_URL_TO_FAILURE_PAGE_RAJLAXMI;
     res.redirect(redirectUrl);
   } catch (err) {
-    console.error("Error fetching PhonePe status or updating database:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 };

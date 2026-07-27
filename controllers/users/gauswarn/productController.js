@@ -45,7 +45,6 @@ exports.addProduct = async (req, res) => {
       insertedId,
     });
   } catch (error) {
-    console.error("Add product error:", error);
     res.status(500).json({ error: "Failed to add product" });
   }
 };
@@ -56,7 +55,6 @@ exports.getAllProducts = async (req, res) => {
     const products = await productModel.getAllProducts();
     res.json({ success: true, products });
   } catch (error) {
-    console.error("Fetch error:", error);
     res.status(500).json({ error: "Failed to fetch products" });
   }
 };
@@ -73,7 +71,6 @@ exports.getProductById = async (req, res) => {
     }
     res.json({ success: true, products });
   } catch (error) {
-    console.error("Fetch product error:", error);
     res.status(500).json({ error: "Failed to fetch product" });
   }
 };
@@ -108,7 +105,6 @@ exports.updateProduct = async (req, res) => {
 
     res.json({ success: true, message: "Product updated successfully" });
   } catch (error) {
-    console.error("Update error:", error);
     res.status(500).json({ error: "Failed to update product" });
   }
 };
@@ -125,7 +121,6 @@ exports.deleteProduct = async (req, res) => {
     }
     res.json({ success: true, message: "Product deleted successfully" });
   } catch (error) {
-    console.error("Delete error:", error);
     res.status(500).json({ error: "Failed to delete product" });
   }
 };
@@ -156,7 +151,6 @@ exports.updateProductPrices = async (req, res) => {
 
     res.json({ success: true, message: "Product updated successfully" });
   } catch (error) {
-    console.error("Update error:", error);
     res.status(500).json({ error: "Failed to update product" });
   }
 };
@@ -204,7 +198,6 @@ exports.addProductNew = async (req, res) => {
       images,
     });
   } catch (err) {
-    console.log(err);
     res.status(500).json({ error: "Something went wrong" });
   }
 };
@@ -256,7 +249,6 @@ exports.updateProductNew = async (req, res) => {
       images,
     });
   } catch (err) {
-    console.log(err);
     res.status(500).json({ error: "Something went wrong" });
   }
 };
@@ -327,7 +319,6 @@ exports.addProductImages = async (req, res) => {
       try {
         oldImages = JSON.parse(product.product_images);
       } catch (e) {
-        console.error("Error parsing product images:", e);
         oldImages = [];
       }
     }
@@ -347,7 +338,6 @@ exports.addProductImages = async (req, res) => {
       images: finalImages,
     });
   } catch (err) {
-    console.log(err);
     res.status(500).json({ error: "Upload failed" });
   }
 };
@@ -377,7 +367,6 @@ exports.replaceProductImage = async (req, res) => {
 
     res.json({ success: true, message: "Image replaced", images });
   } catch (err) {
-    console.log(err);
     res.status(500).json({ error: "Replace failed" });
   }
 };

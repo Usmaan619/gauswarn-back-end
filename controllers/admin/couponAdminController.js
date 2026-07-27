@@ -41,7 +41,6 @@ exports.createCoupon = asyncHandler(async (req, res) => {
       id: result.insertId,
     });
   } catch (error) {
-    console.error("Create coupon error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error.",
@@ -57,7 +56,6 @@ exports.listAllCoupons = asyncHandler(async (req, res) => {
       data: coupons,
     });
   } catch (error) {
-    console.error("List coupons error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error.",
@@ -80,7 +78,6 @@ exports.updateCoupon = asyncHandler(async (req, res) => {
       message: "Coupon updated successfully.",
     });
   } catch (error) {
-    console.error("Update coupon error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error.",
@@ -103,7 +100,6 @@ exports.deleteCoupon = asyncHandler(async (req, res) => {
       message: "Coupon deleted successfully.",
     });
   } catch (error) {
-    console.error("Delete coupon error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error.",

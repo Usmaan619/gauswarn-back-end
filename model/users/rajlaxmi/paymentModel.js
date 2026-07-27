@@ -69,7 +69,6 @@ exports.userPayment = async (payment) => {
       }
     };
   } catch (error) {
-    console.error("Error during payment process:", error);
     throw error; 
   }
 };

@@ -29,7 +29,6 @@ exports.create = async (data) => {
       return result.insertId;
     });
   } catch (error) {
-    console.error(
       " Error in create inquiry:",
       error.message,
       moment().format("YYYY-MM-DD HH:mm:ss"),
@@ -172,7 +171,6 @@ exports.getById = async (id) => {
       return rows[0];
     });
   } catch (error) {
-    console.error(
       " Error in getById inquiry:",
       error.message,
       moment().format("YYYY-MM-DD HH:mm:ss"),
@@ -250,7 +248,6 @@ exports.update = async (id, data) => {
       return result.affectedRows;
     });
   } catch (error) {
-    console.error(" Error in update inquiry:", error.message);
     throw new Error("Unable to update inquiry");
   }
 };
@@ -267,7 +264,6 @@ exports.delete = async (id) => {
       return result.affectedRows; // returns 1 if deleted
     });
   } catch (error) {
-    console.error("Error deleting inquiry:", error.message);
     throw new Error("Unable to delete inquiry");
   }
 };

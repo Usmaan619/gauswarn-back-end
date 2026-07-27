@@ -49,67 +49,39 @@ const youtubeController = require("../../controllers/users/gauswarn/youtubeContr
 const visitorController = require("../../controllers/users/gauswarn/visitorController");
 const couponAdminController = require("../../controllers/admin/couponAdminController");
 
-// ----------------------------
-// Admin Routes
-// ----------------------------
-router.post("/register", registerController.adminUserRegister);
+// ============================
+// PUBLIC Routes (no auth needed)
+// ============================
 router.post("/login", loginController.adminUserLogin);
-
 router.post("/forgetPassword", forgotPasswordController.forgetPassword);
 router.post("/reset", forgotPasswordController.passwordReset);
 router.post("/verifyOtp", forgotPasswordController.verifyOtp);
 
-router.get(
-  "/getAllGauswarnUsers",
-  authMiddleware,
-  registerController.getAllGauswarnUsers,
-);
+// ============================
+// 🔒 ALL ROUTES BELOW REQUIRE AUTH
+// ============================
+router.use(authMiddleware); // Apply to all routes below this line
 
-// update user
+// ----------------------------
+// Admin User Management
+// ----------------------------
+router.post("/register", registerController.adminUserRegister);
+router.get("/getAllGauswarnUsers", registerController.getAllGauswarnUsers);
 router.post("/updateUser/:id", registerController.updateUser);
-
-// delete user
 router.delete("/deleteUser/:id", registerController.deleteUser);
 
-// router.get("/me", authMiddleware, registerController.meAPI);
-router.get(
-  "/getAllCustomer",
-  authMiddleware,
-  userInfoController.getAllUserInfo,
-);
-router.get(
-  "/getAllOrderDetails",
-  authMiddleware,
-  userInfoController.getAllOrderDetails,
-);
-router.post(
-  "/updateOrderStatus/:id",
-  authMiddleware,
-  userInfoController.updateOrderStatus,
-);
+router.get("/getAllCustomer", userInfoController.getAllUserInfo);
+router.get("/getAllOrderDetails", userInfoController.getAllOrderDetails);
+router.post("/updateOrderStatus/:id", userInfoController.updateOrderStatus);
 
-router.post(
-  "/getAllSales",
-  authMiddleware,
-  monthlyReportController.getAllSales,
-);
-
-router.get(
-  "/dashboardCounts",
-  authMiddleware,
-  dashboardController.getDashboardCounts,
-);
-
-router.post(
-  "/getAllSalesRajlaxmi",
-  monthlyReportController.getAllSalesRajlaxmi,
-);
+router.post("/getAllSales", monthlyReportController.getAllSales);
+router.get("/dashboardCounts", dashboardController.getDashboardCounts);
+router.post("/getAllSalesRajlaxmi", monthlyReportController.getAllSalesRajlaxmi);
 
 // ----------------------------
-// Rajlaxmi Routes
+// Rajlaxmi Routes (ALL PROTECTED)
 // ----------------------------
-
-// Cutomers
+// Customers
 router.get("/getAllCutomerRajlaxmi", registerController.getAllUsers);
 
 // Products
@@ -129,7 +101,7 @@ router.delete(
   productControllerRajlaxmi.deleteProduct,
 );
 
-// orders
+// Orders
 router.post("/createOrderRajlaxmi", orderControllerRajlaxmi.createOrder);
 router.post("/updateRajlaxmiOrderById", orderControllerRajlaxmi.updateOrder);
 router.post("/deleteRajlaxmiOrderById", orderControllerRajlaxmi.deleteOrder);
@@ -168,7 +140,7 @@ router.delete(
 );
 
 // ----------------------------
-// Gauswarn Routes
+// Gauswarn Routes (ALL PROTECTED)
 // ----------------------------
 // Products
 router.post("/createProductGauswarn", productControllerGauswarn.addProduct);
@@ -182,132 +154,87 @@ router.post(
 );
 router.get("/gauswarnGetAllProduct", productControllerGauswarn.getAllProducts);
 
-// Feedback (auth-protected)
-router.get(
-  "/allfeedback",
-  authMiddleware,
-  feedbackGauswarnController.getReviews,
-);
-router.post(
-  "/createFeedback",
-  authMiddleware,
-  feedbackGauswarnController.feedback,
-);
+// Feedback
+router.get("/allfeedback", feedbackGauswarnController.getReviews);
+router.post("/createFeedback", feedbackGauswarnController.feedback);
 router.post(
   "/getSingleFeedbackById/:id",
-  authMiddleware,
   feedbackGauswarnController.getReviewById,
 );
 router.put(
   "/updateFeedbackById/:id",
-  authMiddleware,
   feedbackGauswarnController.updateReviewById,
 );
 router.delete(
   "/deleteFeedbackById/:id",
-  authMiddleware,
   feedbackGauswarnController.deleteReviewById,
 );
 
 // Image and Video upload
-// router.post("/imageUpload", imageUploadControllerGauswarn.imageAndVideoUpload);
-
-// BASE64
 router.post("/base64", imageUploadControllerGauswarn.uploadMedia);
-
-// Single file
 router.post(
   "/imageUpload",
   upload.single("file"),
   imageUploadControllerGauswarn.uploadMedia,
 );
-
-// Multiple file
 router.post(
   "/files",
   upload.array("files"),
   imageUploadControllerGauswarn.uploadMedia,
 );
-
 router.post(
   "/add-images",
   upload.array("images", 10),
   productControllerGauswarn.addProductImages,
 );
-
 router.post(
   "/replace-image",
   upload.single("image"),
   productControllerGauswarn.replaceProductImage,
 );
 
+// Home Banners
 router.post("/banner-signature", homeBannerControllerGauswarn.getSignature);
-
-// GET all 4 banners
 router.get("/home-banners", homeBannerControllerGauswarn.getHomeBanners);
-
 router.post(
   "/home-banners-url",
   homeBannerControllerGauswarn.updateHomeBannerByUrl,
 );
-
-// POST all 4 banners
 router.post(
   "/home-banners-images",
   upload.single("banner"),
   homeBannerControllerGauswarn.updateHomeBanner,
 );
-// upload reels
-router.post("/reels", reelControllerGauswarn.createReel); // add
-router.get("/reels/all", reelControllerGauswarn.listReels); // list
-router.delete("/reels-delete/:id", reelControllerGauswarn.deleteReelById); // delete
 
-// blogs routes
-// CREATE BLOG
+// Reels
+router.post("/reels", reelControllerGauswarn.createReel);
+router.get("/reels/all", reelControllerGauswarn.listReels);
+router.delete("/reels-delete/:id", reelControllerGauswarn.deleteReelById);
+
+// Blogs
 router.post(
   "/blogs/create",
   upload.single("image"),
-  (req, res, next) => {
-    console.log("DEBUG BODYssssssssssssss:", req.body);
-    console.log("DEBUG FILE:", req.file);
-    next();
-  },
   blogsControllerGauswarn.createBlogController,
 );
-// UPDATE BLOG
 router.post(
   "/blogs/update/:id",
   upload.single("image"),
   blogsControllerGauswarn.updateBlogController,
 );
-
-// GET ALL
 router.get("/blogs", blogsControllerGauswarn.getAllBlogsController);
-
-// GET BY SLUG
 router.get("/blogs/single/:slug", blogsControllerGauswarn.getSingleBlogBySlug);
-
 router.get("/blogs/:id", blogsControllerGauswarn.getBlogByIdController);
-
-// DELETE
 router.delete("/blogs/:id", blogsControllerGauswarn.deleteBlogController);
 
-// ** B2B Inquiry start  *//
-
+// B2B Inquiry
 router.post("/createb2bInquiry", createInquiry);
-
-router.get("/getb2bInquiries", getInquiries); // pagination + search + filter
-
+router.get("/getb2bInquiries", getInquiries);
 router.get("/getb2bInquiryById/:id", getInquiryById);
-
 router.post("/updateb2bInquiry/:id", updateInquiry);
-
 router.delete("/deleteb2bInquiry/:id", deleteInquiry);
 
-// ** B2B Inquiry end  *//
-
-//Newsletter Routes
-
+// Newsletter
 router.get("/getNewsletter", newsletterController.getNewsletter);
 router.post("/createNewsletter", newsletterController.createNewsletter);
 router.post(
@@ -316,35 +243,28 @@ router.post(
 );
 router.delete("/deleteNewsletter/:id", newsletterController.deleteNewsletter);
 
-// End Newsletter Routes
-
+// Offers
 router.get("/getAllOffer", topBannerOfferController.getOffersController);
 router.post("/updateOffer", topBannerOfferController.updateOffersController);
 
-// youtube shorts
-router.post("/shorts", youtubeController.createYoutubeShort); // delete
-router.get("/shorts/all", youtubeController.listYoutubeShorts); // delete
-router.delete("/shorts-delete/:id", youtubeController.deleteYoutubeShortById); // delete
+// YouTube Shorts
+router.post("/shorts", youtubeController.createYoutubeShort);
+router.get("/shorts/all", youtubeController.listYoutubeShorts);
+router.delete("/shorts-delete/:id", youtubeController.deleteYoutubeShortById);
 
-// ** Visitor Tracking **
-router.get("/list-visitors", authMiddleware, visitorController.listVisitors);
-router.delete("/delete-visitor/:id", authMiddleware, visitorController.deleteVisitor);
-router.delete("/clear-visitors", authMiddleware, visitorController.clearAllVisitors);
+// Visitor Tracking
+router.get("/list-visitors", visitorController.listVisitors);
+router.delete("/delete-visitor/:id", visitorController.deleteVisitor);
+router.delete("/clear-visitors", visitorController.clearAllVisitors);
 
-// Contact (auth-protected)
-router.get(
-  "/getAllContact",
-  authMiddleware,
-  contactControllerGauswarn.getAllContact,
-);
+// Contact
+router.get("/getAllContact", contactControllerGauswarn.getAllContact);
 
-// ----------------------------
-// Coupon Admin Routes
-// ----------------------------
-router.get("/coupons", authMiddleware, couponAdminController.listAllCoupons);
-router.post("/coupons", authMiddleware, couponAdminController.createCoupon);
-router.put("/coupons/:id", authMiddleware, couponAdminController.updateCoupon);
-router.delete("/coupons/:id", authMiddleware, couponAdminController.deleteCoupon);
+// Coupons
+router.get("/coupons", couponAdminController.listAllCoupons);
+router.post("/coupons", couponAdminController.createCoupon);
+router.put("/coupons/:id", couponAdminController.updateCoupon);
+router.delete("/coupons/:id", couponAdminController.deleteCoupon);
 
 // ----------------------------
 // Global Error Handler

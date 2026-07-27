@@ -72,7 +72,6 @@ exports.getAllGauswarnUsers = asyncHandler(async (req, res) => {
       total: users.total,
     });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ message: "Database error" });
   }
 });
@@ -113,7 +112,6 @@ exports.getAllUsers = asyncHandler(async (req, res) => {
     const customers = await registerModel.getAllUsers();
     res.status(200).json({ success: true, customers });
   } catch (error) {
-    console.error("Get All Contacts Error:", error);
     throw error;
   }
 });

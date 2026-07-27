@@ -22,7 +22,6 @@ exports.createReview = asyncHandler(async (req, res) => {
     );
     res.status(201).json({ success: true, message: "Review created", id });
   } catch (error) {
-    console.error("Create Review Error:", error);
     throw error;
   }
 });
@@ -33,7 +32,6 @@ exports.getAllReviews = asyncHandler(async (req, res) => {
     const reviews = await reviewModel.getAllReviews();
     res.status(200).json({ success: true, reviews });
   } catch (error) {
-    console.error("Get All Reviews Error:", error);
     throw error;
   }
 });
@@ -50,7 +48,6 @@ exports.getReviewById = asyncHandler(async (req, res) => {
     }
     res.status(200).json({ success: true, review });
   } catch (error) {
-    console.error("Get Review By ID Error:", error);
     throw error;
   }
 });
@@ -64,7 +61,6 @@ exports.updateReview = asyncHandler(async (req, res) => {
       .status(200)
       .json({ success: true, message: "Review updated", result: updated });
   } catch (error) {
-    console.error("Update Review Error:", error);
     throw error;
   }
 });
@@ -76,7 +72,6 @@ exports.deleteReview = asyncHandler(async (req, res) => {
     await reviewModel.deleteReview(id);
     res.status(200).json({ success: true, message: "Review deleted" });
   } catch (error) {
-    console.error("Delete Review Error:", error);
     throw error;
   }
 });
@@ -91,7 +86,6 @@ exports.getReviews = asyncHandler(async (req, res) => {
     }
 
     const reviews = await reviewModel.getReviewsByProduct(product_id);
-    console.log("reviews: ", reviews);
 
     if (!reviews?.length) {
       return res.json({
@@ -136,7 +130,6 @@ exports.getReviews = asyncHandler(async (req, res) => {
       reviews,
     });
   } catch (error) {
-    console.error("Fetch Product Reviews Error:", error);
     throw error;
   }
 });

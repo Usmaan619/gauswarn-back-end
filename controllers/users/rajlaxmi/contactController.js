@@ -5,7 +5,6 @@ const registerModel = require("../../../model/users/rajlaxmi/registerModel");
 exports.userContact = asyncHandler(async (req, res) => {
   try {
     const { uid, user_name, user_email, user_number, message } = req.body;
-    console.log("req.body: ", req.body);
 
     // Validation
     if (!uid && !user_name && !user_email && !user_number && !message) {
@@ -29,7 +28,6 @@ exports.userContact = asyncHandler(async (req, res) => {
     await contactModel.userContact(newContact);
     return res.json({ success: true, message: "Contact successfully saved" });
   } catch (error) {
-    console.error("Database Error", error);
     res.status(500).json({
       message: "Internal server error",
       error: error.message,
@@ -56,7 +54,6 @@ exports.createContact = asyncHandler(async (req, res) => {
     );
     res.status(201).json({ success: true, message: "Contact created", id });
   } catch (error) {
-    console.error("Create Contact Error:", error);
     throw error;
   }
 });
@@ -67,7 +64,6 @@ exports.getAllContacts = asyncHandler(async (req, res) => {
     const contact = await contactModel.getAllContacts();
     res.status(200).json({ success: true, contact });
   } catch (error) {
-    console.error("Get All Contacts Error:", error);
     throw error;
   }
 });
@@ -82,7 +78,6 @@ exports.getContactById = asyncHandler(async (req, res) => {
     }
     res.status(200).json(Contact);
   } catch (error) {
-    console.error("Get Contact By ID Error:", error);
     throw error;
   }
 });
@@ -96,7 +91,6 @@ exports.updateContact = asyncHandler(async (req, res) => {
       .status(200)
       .json({ success: true, message: "Contact updated", result: updated });
   } catch (error) {
-    console.error("Update Contact Error:", error);
     throw error;
   }
 });
@@ -108,7 +102,6 @@ exports.deleteContact = asyncHandler(async (req, res) => {
     await contactModel.deleteContact(id);
     res.status(200).json({ success: true, message: "Contact deleted" });
   } catch (error) {
-    console.error("Delete Contact Error:", error);
     throw error;
   }
 });

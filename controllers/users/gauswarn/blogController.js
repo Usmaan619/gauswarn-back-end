@@ -59,7 +59,6 @@ exports.createBlogController = async (req, res) => {
       slug,
     });
   } catch (err) {
-    console.error("Create blog error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -92,7 +91,6 @@ exports.getAllBlogsController = async (req, res) => {
       }
     });
   } catch (err) {
-    console.error("Get all blogs error:", err);
     res.status(500).json({
       success: false,
       message: err.message,
@@ -114,7 +112,6 @@ exports.getSingleBlogBySlug = async (req, res) => {
     }
     res.json({ success: true, blog });
   } catch (err) {
-    console.error("Get blog by slug error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -139,7 +136,6 @@ exports.getBlogByIdController = async (req, res) => {
       blog,
     });
   } catch (err) {
-    console.error("Get Blog By ID Error:", err);
     res.status(500).json({
       success: false,
       message: err.message,
@@ -190,7 +186,6 @@ exports.updateBlogController = async (req, res) => {
       slug,
     });
   } catch (err) {
-    console.error("Update error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -217,7 +212,6 @@ exports.deleteBlogController = async (req, res) => {
     await deleteBlog(id);
     res.json({ success: true, message: "Blog deleted successfully" });
   } catch (err) {
-    console.error("Delete error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };

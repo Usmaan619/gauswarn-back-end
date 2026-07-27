@@ -17,7 +17,6 @@ exports.addReview = async (name, email, rating, feedback) => {
       return result.insertId;
     });
   } catch (error) {
-    console.error("Database Error:", error.message);
     throw error;
   }
 };
@@ -31,7 +30,6 @@ exports.getAllReviews = async () => {
       return rows;
     });
   } catch (error) {
-    console.log("error: ", error);
   }
 };
 

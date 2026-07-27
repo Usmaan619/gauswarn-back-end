@@ -26,7 +26,6 @@ const trackVisitor = asyncHandler(async (req, res) => {
       country = geoResponse.data.country;
     }
   } catch (geoError) {
-    console.error("Geo API Error:", geoError.message);
   }
 
   try {
@@ -66,19 +65,15 @@ const trackVisitor = asyncHandler(async (req, res) => {
         ) {
           try {
             await axios.get(bhashSmsUrl, { params });
-            console.log("WhatsApp alert sent for new visitor:", clientIp);
           } catch (smsError) {
-            console.error("BhashSMS API Error:", smsError.message);
           }
         } else {
-          console.log("BhashSMS credentials not set. Skipping WhatsApp alert.");
         }
       }
     });
 
     res.status(200).json({ success: true, message: "Visitor tracked" });
   } catch (error) {
-    console.error("Tracking Error:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
@@ -88,7 +83,6 @@ const listVisitors = async (req, res) => {
     const visitors = await getAllVisitors();
     res.json({ success: true, visitors });
   } catch (error) {
-    console.error("Error fetching visitors:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
@@ -101,7 +95,6 @@ const deleteVisitor = async (req, res) => {
     });
     res.json({ success: true, message: "Visitor deleted successfully" });
   } catch (error) {
-    console.error("Error deleting visitor:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
@@ -113,7 +106,6 @@ const clearAllVisitors = async (req, res) => {
     });
     res.json({ success: true, message: "All visitors cleared successfully" });
   } catch (error) {
-    console.error("Error clearing visitors:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };

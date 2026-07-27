@@ -16,7 +16,6 @@ exports.insertPayment = async (
       .promise()
       .query(query, [status, paymentDetails, amount, isPaymentPaid]);
   } catch (error) {
-    console.log("error:insertPayment ", error);
   }
 };
 
