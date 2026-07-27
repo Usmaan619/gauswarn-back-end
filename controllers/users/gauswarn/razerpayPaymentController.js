@@ -102,8 +102,9 @@ const generateShopmozoOrder = async (userData, cart, date) => {
         timeout: 10000,
       },
     );
+    console.log(
       "response:--------------------------------------------- ",
-      response,
+      response
     );
 
     if (response.data?.result === "1") {
@@ -214,10 +215,11 @@ const createPaymentAndGenerateUrlRazor = async (req, res) => {
     const chargeAmount = userData.final_payable_amount || userData.user_total_amount;
     const amountInPaise = Number(chargeAmount) * 100;
 
+    console.log(
       "🛒 Payment initiation for:",
       userData.user_name,
       "Final Amount: ₹",
-      chargeAmount,
+      chargeAmount
     );
 
     /* 1️⃣ SAVE TO DB (temporary order id) */

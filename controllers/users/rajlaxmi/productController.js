@@ -30,6 +30,7 @@ exports.addProduct = async (req, res) => {
     // const cleanKgArray = kgArray.map(item => item.split('KG')[0]);
     // const cleanLtrArray = ltrArray.map(item => item.split('LTR')[0]);
     const converted_product_weight = await extractIntegers(product_weight);
+    console.log(
       "converted_product_weight:----------- ",
       converted_product_weight
     );

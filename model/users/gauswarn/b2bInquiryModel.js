@@ -29,9 +29,10 @@ exports.create = async (data) => {
       return result.insertId;
     });
   } catch (error) {
+    console.log(
       " Error in create inquiry:",
       error.message,
-      moment().format("YYYY-MM-DD HH:mm:ss"),
+      moment().format("YYYY-MM-DD HH:mm:ss")
     );
     throw new Error("Unable to create inquiry");
   }
@@ -171,9 +172,10 @@ exports.getById = async (id) => {
       return rows[0];
     });
   } catch (error) {
+    console.log(
       " Error in getById inquiry:",
       error.message,
-      moment().format("YYYY-MM-DD HH:mm:ss"),
+      moment().format("YYYY-MM-DD HH:mm:ss")
     );
     throw new Error("Unable to fetch inquiry");
   }
