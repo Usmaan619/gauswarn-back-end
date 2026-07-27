@@ -20,6 +20,7 @@ exports.findCartItem = async (product_id, user_id) => {
     });
   } catch (error) {
     try {
+      console.log(
         "results:findCartItem2 ----- second catch ",
         error,
         moment().format("MMMM Do YYYY, h:mm:ss a")
@@ -35,6 +36,7 @@ exports.findCartItem = async (product_id, user_id) => {
         return rows;
       });
     } catch (error) {
+      console.log(
         "error:findCartItem-------2 secound console ",
         error,
         moment().format("MMMM Do YYYY, h:mm:ss a")
@@ -76,6 +78,7 @@ exports.addCartItem = async (cartItem) => {
       return results; // Return the ID of the inserted item or results if needed
     });
   } catch (error) {
+    console.log(
       "Error in addCartItem:",
       error,
       moment().format("MMMM Do YYYY, h:mm:ss a")
@@ -107,6 +110,7 @@ exports.updateCartItem = async (
       return results.affectedRows; // Return the number of rows affected
     });
   } catch (error) {
+    console.log(
       "Error in updateCartItem:",
       error,
       moment().format("MMMM Do YYYY, h:mm:ss a")
@@ -127,6 +131,7 @@ exports.removeFromCartModal = async (user_id, product_id) => {
 
       // Executing the delete query
       const [result] = await connection.execute(query, [product_id, user_id]);
+      console.log(
         "result:removeFromCartModal ",
         result,
         moment().format("MMMM Do YYYY, h:mm:ss a")
@@ -140,6 +145,7 @@ exports.removeFromCartModal = async (user_id, product_id) => {
       }
     });
   } catch (error) {
+    console.log(
       "Error removing product from cart:",
       error,
       moment().format("MMMM Do YYYY, h:mm:ss a")
