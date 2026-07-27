@@ -58,6 +58,18 @@ router.post("/reset", forgotPasswordController.passwordReset);
 router.post("/verifyOtp", forgotPasswordController.verifyOtp);
 
 // ============================
+// PUBLIC Frontend Routes (no auth needed)
+// ============================
+router.get("/home-banners", homeBannerControllerGauswarn.getHomeBanners);
+router.get("/shorts/all", youtubeController.listYoutubeShorts);
+router.get("/getAllOffer", topBannerOfferController.getOffersController);
+router.get("/blogs", blogsControllerGauswarn.getAllBlogsController);
+router.get("/blogs/single/:slug", blogsControllerGauswarn.getSingleBlogBySlug);
+router.get("/blogs/:id", blogsControllerGauswarn.getBlogByIdController);
+router.post("/createNewsletter", newsletterController.createNewsletter);
+router.post("/createb2bInquiry", createInquiry);
+
+// ============================
 // 🔒 ALL ROUTES BELOW REQUIRE AUTH
 // ============================
 router.use(authMiddleware); // Apply to all routes below this line
@@ -195,7 +207,7 @@ router.post(
 
 // Home Banners
 router.post("/banner-signature", homeBannerControllerGauswarn.getSignature);
-router.get("/home-banners", homeBannerControllerGauswarn.getHomeBanners);
+// router.get("/home-banners", homeBannerControllerGauswarn.getHomeBanners); // Moved to public
 router.post(
   "/home-banners-url",
   homeBannerControllerGauswarn.updateHomeBannerByUrl,
@@ -222,13 +234,13 @@ router.post(
   upload.single("image"),
   blogsControllerGauswarn.updateBlogController,
 );
-router.get("/blogs", blogsControllerGauswarn.getAllBlogsController);
-router.get("/blogs/single/:slug", blogsControllerGauswarn.getSingleBlogBySlug);
-router.get("/blogs/:id", blogsControllerGauswarn.getBlogByIdController);
+// router.get("/blogs", blogsControllerGauswarn.getAllBlogsController);
+// router.get("/blogs/single/:slug", blogsControllerGauswarn.getSingleBlogBySlug);
+// router.get("/blogs/:id", blogsControllerGauswarn.getBlogByIdController);
 router.delete("/blogs/:id", blogsControllerGauswarn.deleteBlogController);
 
 // B2B Inquiry
-router.post("/createb2bInquiry", createInquiry);
+// router.post("/createb2bInquiry", createInquiry);
 router.get("/getb2bInquiries", getInquiries);
 router.get("/getb2bInquiryById/:id", getInquiryById);
 router.post("/updateb2bInquiry/:id", updateInquiry);
@@ -236,7 +248,7 @@ router.delete("/deleteb2bInquiry/:id", deleteInquiry);
 
 // Newsletter
 router.get("/getNewsletter", newsletterController.getNewsletter);
-router.post("/createNewsletter", newsletterController.createNewsletter);
+// router.post("/createNewsletter", newsletterController.createNewsletter);
 router.post(
   "/updateNewsletterStatus/:id",
   newsletterController.updateNewsletterStatus,
@@ -244,12 +256,12 @@ router.post(
 router.delete("/deleteNewsletter/:id", newsletterController.deleteNewsletter);
 
 // Offers
-router.get("/getAllOffer", topBannerOfferController.getOffersController);
+// router.get("/getAllOffer", topBannerOfferController.getOffersController);
 router.post("/updateOffer", topBannerOfferController.updateOffersController);
 
 // YouTube Shorts
 router.post("/shorts", youtubeController.createYoutubeShort);
-router.get("/shorts/all", youtubeController.listYoutubeShorts);
+// router.get("/shorts/all", youtubeController.listYoutubeShorts);
 router.delete("/shorts-delete/:id", youtubeController.deleteYoutubeShortById);
 
 // Visitor Tracking
