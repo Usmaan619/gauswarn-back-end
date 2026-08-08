@@ -129,9 +129,11 @@ exports.adminUserLogin = asyncHandler(async (req, res) => {
       accessToken: token,
     });
   } catch (error) {
+    console.error("Login error:", error);
     return res.status(500).json({
       success: false,
       message: "Server error. Please try again later.",
+      details: error.message,
     });
   }
 });

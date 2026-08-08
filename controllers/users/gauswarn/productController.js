@@ -367,7 +367,8 @@ exports.replaceProductImage = async (req, res) => {
 
     res.json({ success: true, message: "Image replaced", images });
   } catch (err) {
-    res.status(500).json({ error: "Replace failed" });
+    console.error("Replace image error:", err);
+    res.status(500).json({ error: "Replace failed", details: err.message });
   }
 };
 
