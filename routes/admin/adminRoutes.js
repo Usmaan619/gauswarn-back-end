@@ -204,6 +204,15 @@ router.post(
   upload.single("image"),
   productControllerGauswarn.replaceProductImage,
 );
+// Base64 product image routes — no multer needed
+router.post(
+  "/add-images-base64",
+  productControllerGauswarn.addProductImagesBase64,
+);
+router.post(
+  "/replace-image-base64",
+  productControllerGauswarn.replaceProductImageBase64,
+);
 
 // Home Banners
 router.post("/banner-signature", homeBannerControllerGauswarn.getSignature);
@@ -216,6 +225,11 @@ router.post(
   "/home-banners-images",
   upload.single("banner"),
   homeBannerControllerGauswarn.updateHomeBanner,
+);
+// Base64 banner upload — no multer needed
+router.post(
+  "/home-banners-base64",
+  homeBannerControllerGauswarn.updateHomeBannerBase64,
 );
 
 // Reels

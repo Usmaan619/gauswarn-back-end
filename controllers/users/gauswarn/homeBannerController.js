@@ -234,3 +234,39 @@ exports.updateHomeBannerByUrl = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
+// =============================================
+// BASE64 Banner Upload — No Cloudinary/S3
+// =============================================
+exports.updateHomeBannerBase64 = async (req, res) => {
+  try {
+    const { slot, image } = req.body;
+
+    if (!slot || !image) {
+      return res.status(400).json({ message: "Slot and image (base64) are required" });
+    }
+
+    const slotNum = Number(slot);
+    if (![1, 2, 3, 4].includes(slotNum)) {
+      return res.status(400).json({ message: "Invalid slot number (1-4 allowed)" });
+    }
+
+    // Validate base64 format
+    if (!image.startsWith("data:image/")) {
+      return res.status(400).json({ message: "Invalid base64 image format. Must start with data:image/" });
+    }
+
+    await ensureHomeBannerRow();
+
+    // Directly store base64 in database
+    await updateBannerSlot(slotNum, image);
+
+    return res.json({
+      success: true,
+      message: "Banner updated successfully",
+      slot: slotNum,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};

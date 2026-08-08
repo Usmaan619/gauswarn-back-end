@@ -370,3 +370,113 @@ exports.replaceProductImage = async (req, res) => {
     res.status(500).json({ error: "Replace failed" });
   }
 };
+
+// =============================================
+// BASE64 Product Image Endpoints — No Cloudinary/S3
+// =============================================
+
+// Add multiple base64 images to a product (append to existing)
+exports.addProductImagesBase64 = async (req, res) => {
+  try {
+    const { product_id, images } = req.body;
+
+    if (!product_id) {
+      return res.status(400).json({ message: "Product ID required" });
+    }
+
+    if (!images || !Array.isArray(images) || images.length === 0) {
+      return res.status(400).json({ message: "At least 1 base64 image required" });
+    }
+
+    // Validate all images are base64
+    for (let i = 0; i < images.length; i++) {
+      if (!images[i].startsWith("data:image/")) {
+        return res.status(400).json({
+          message: `Image at index ${i} is not a valid base64 image. Must start with data:image/`,
+        });
+      }
+    }
+
+    // Get existing product
+    const product = await productModel.getProductByProductId(product_id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Parse old images
+    let oldImages = [];
+    if (product.product_images) {
+      try {
+        oldImages = JSON.parse(product.product_images);
+      } catch (e) {
+        oldImages = [];
+      }
+    }
+
+    // Append new base64 images
+    const finalImages = [...oldImages, ...images];
+
+    // Update DB directly
+    await productModel.updateProductImages(
+      product_id,
+      JSON.stringify(finalImages),
+    );
+
+    res.json({
+      success: true,
+      message: "Images uploaded successfully",
+      totalImages: finalImages.length,
+      images: finalImages,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Upload failed" });
+  }
+};
+
+// Replace single product image by index with base64
+exports.replaceProductImageBase64 = async (req, res) => {
+  try {
+    const { product_id, replace_index, image } = req.body;
+
+    if (!product_id || replace_index === undefined || !image) {
+      return res.status(400).json({
+        message: "product_id, replace_index, and image (base64) are required",
+      });
+    }
+
+    if (!image.startsWith("data:image/")) {
+      return res.status(400).json({
+        message: "Invalid base64 image format. Must start with data:image/",
+      });
+    }
+
+    const product = await productModel.getProductByProductId(product_id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    const images = JSON.parse(product.product_images || "[]");
+
+    const idx = Number(replace_index);
+    if (idx < 0 || idx >= images.length) {
+      return res.status(400).json({
+        message: `Invalid replace_index. Must be between 0 and ${images.length - 1}`,
+      });
+    }
+
+    // Replace image at index
+    images[idx] = image;
+
+    // Update DB directly
+    await productModel.updateProductImages(product_id, JSON.stringify(images));
+
+    res.json({
+      success: true,
+      message: "Image replaced successfully",
+      images,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Replace failed" });
+  }
+};
+

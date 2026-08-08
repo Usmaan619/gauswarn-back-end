@@ -1,5 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const compression = require("compression");
 const usersRoutes = require("./routes/users/gauswarn/usersRoutes");
 const adminRoutes = require("./routes/admin/adminRoutes");
 const rajlaxmiRoutes = require("./routes/users/rajlaxmi/rajlaxmiRoutes");
@@ -21,8 +22,9 @@ const metaFeedRoute = require("./routes/users/gauswarn/metaFeed");
 const { default: axios } = require("axios");
 
 // Middlewares
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(compression()); // Gzip compression — base64 responses ko compress karega
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 // 🔒 CORS — only allow your frontend domains
 const allowedOrigins = [
@@ -91,10 +93,80 @@ app.get("/api/branded-content", async (req, res) => {
 // Error handling middleware
 app.use(errorHandler);
 
+// =============================================
+// Auto Migration — columns ko LONGTEXT mein change karo (ek baar)
+// =============================================
+async function runMigrations() {
+  let connection;
+  try {
+    connection = await connectToDatabase();
+
+    const migrations = [
+      {
+        table: "gauswarn_home_banners",
+        columns: ["banner1", "banner2", "banner3", "banner4"],
+      },
+      {
+        table: "gauswarn_product",
+        columns: ["product_images"],
+      },
+      {
+        table: "rajlaxmi_product",
+        columns: ["product_image"],
+      },
+    ];
+
+    for (const { table, columns } of migrations) {
+      // Check if table exists
+      const [tables] = await connection.execute(
+        `SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?`,
+        [table]
+      );
+
+      if (tables.length === 0) {
+        console.log(`⚠️  Migration skip: Table '${table}' not found`);
+        continue;
+      }
+
+      for (const col of columns) {
+        // Check current column type
+        const [colInfo] = await connection.execute(
+          `SELECT DATA_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
+          [table, col]
+        );
+
+        if (colInfo.length === 0) {
+          console.log(`⚠️  Migration skip: Column '${col}' not found in '${table}'`);
+          continue;
+        }
+
+        if (colInfo[0].DATA_TYPE === "longtext") {
+          // Already migrated, skip
+          continue;
+        }
+
+        // Alter column to LONGTEXT
+        await connection.execute(
+          `ALTER TABLE \`${table}\` MODIFY COLUMN \`${col}\` LONGTEXT NULL`
+        );
+        console.log(`✅ Migration: ${table}.${col} → LONGTEXT`);
+      }
+    }
+
+    console.log("✅ Database migrations complete");
+  } catch (err) {
+    console.error("⚠️  Migration error (non-fatal):", err.message);
+    // Non-fatal — server will still start
+  } finally {
+    if (connection) connection.end();
+  }
+}
+
 // Start the server
 async function startServer() {
   try {
     await connectToDatabase();
+    await runMigrations();
     app.listen(port, () => {
       console.log(`Server running on port ${port}`);
     });
