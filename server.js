@@ -23,6 +23,11 @@ const { default: axios } = require("axios");
 
 // Middlewares
 app.use(compression()); // Gzip compression — base64 responses ko compress karega
+
+// ⚠️ Razorpay webhook needs RAW body for HMAC signature verification.
+// Must be registered BEFORE express.json() so the raw bytes are preserved.
+app.use("/users/webhook/razorpay", express.raw({ type: "application/json" }));
+
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 

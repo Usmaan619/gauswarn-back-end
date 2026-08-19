@@ -230,51 +230,66 @@ const createPaymentAndGenerateUrlRazor = async (req, res) => {
 /* =============================
    VERIFY PAYMENT (CLIENT CALLBACK)
    Called by frontend after Razorpay payment
+   ⚡ BULLETPROOF: Only signature + Razorpay fetch can reject.
+      DB / Shopmozo / Coupon / WhatsApp failures never block response.
 ============================= */
 const getRazorpayStatusAndUpdatePayment = async (req, res) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+    req.body?.rzpResponse || {};
+  const notes = req.body?.notes || {};
+
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("🔍 [STATUS] Payment verify request");
+  console.log("   order_id  :", razorpay_order_id);
+  console.log("   payment_id:", razorpay_payment_id);
+  console.log("   userId    :", notes.userId);
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+  // ── STEP 1: Basic param check ───────────────────────────────────────────────
+  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    console.warn("⚠️ [STATUS] Missing Razorpay params");
+    return res.status(400).json({ success: false, message: "Missing Razorpay params" });
+  }
+
+  // ── STEP 2: HMAC Signature verification ────────────────────────────────────
+  let signatureValid = false;
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
-      req.body?.rzpResponse || {};
-    const notes = req.body?.notes || {};
-
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("🔍 [STATUS] Payment verify request");
-    console.log("   order_id  :", razorpay_order_id);
-    console.log("   payment_id:", razorpay_payment_id);
-    console.log("   userId    :", notes.userId);
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      console.warn("⚠️ [STATUS] Missing params — rejecting");
-      return res.status(400).json({ success: false, message: "Missing Razorpay params" });
-    }
-
-    // 1. Verify HMAC signature
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest("hex");
+    signatureValid = expectedSignature === razorpay_signature;
+    console.log("🔐 [STATUS] Signature:", signatureValid ? "✅ VALID" : "❌ INVALID");
+  } catch (sigErr) {
+    console.error("❌ [STATUS] Signature check error:", sigErr.message);
+    return res.status(500).json({ success: false, message: "Signature verification error" });
+  }
 
-    const signatureMatch = expectedSignature === razorpay_signature;
-    console.log("🔐 [STATUS] Signature match:", signatureMatch ? "✅ YES" : "❌ NO");
+  if (!signatureValid) {
+    return res.status(400).json({ success: false, message: "Invalid signature" });
+  }
 
-    if (!signatureMatch) {
-      return res.status(400).json({ success: false, message: "Invalid signature" });
-    }
-
-    // 2. Fetch payment from Razorpay
+  // ── STEP 3: Fetch payment from Razorpay ────────────────────────────────────
+  let payment, isPaid;
+  try {
     console.log("📡 [STATUS] Fetching payment from Razorpay...");
-    const payment = await razorpay.payments.fetch(razorpay_payment_id);
-    const isPaid = payment.status === "captured";
+    payment = await razorpay.payments.fetch(razorpay_payment_id);
+    isPaid = payment.status === "captured";
     console.log("💳 [STATUS] Razorpay status:", payment.status, "| isPaid:", isPaid);
+  } catch (rzpErr) {
+    console.error("❌ [STATUS] Razorpay fetch error:", rzpErr.message);
+    return res.status(502).json({ success: false, message: "Could not fetch payment from Razorpay" });
+  }
 
-    let shopmozoOrderId = null;
+  // From here: ALL steps are fire-and-forget — none can block the response
+  let shopmozoOrderId = null;
 
-    if (isPaid) {
-      // 3. Get user's saved order from DB
+  if (isPaid) {
+    // ── STEP 4: Fetch DB record + Create Shopmozo ─────────────────────────────
+    try {
       console.log("🗄️  [STATUS] Fetching order from DB for userId:", notes.userId);
       const [[userRow]] = await withConnection((conn) =>
-        conn.execute("SELECT * FROM gauswarn_payment WHERE id=?", [notes.userId])
+        conn.execute("SELECT * FROM gauswarn_payment WHERE user_id=?", [notes.userId])
       );
 
       if (userRow) {
@@ -287,53 +302,61 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
       } else {
         console.warn("⚠️  [STATUS] No DB record found for userId:", notes.userId);
       }
+    } catch (dbFetchErr) {
+      console.error("⚠️  [STATUS] DB fetch / Shopmozo error (non-fatal):", dbFetchErr.message);
+      // shopmozoOrderId stays null — payment still succeeds
+    }
 
-      // 4. Increment coupon usage
-      if (notes.coupon_code) {
-        try {
-          const coupon = await couponModel.findCouponByCode(notes.coupon_code);
-          if (coupon) {
-            await couponModel.incrementUsedCount(coupon.id);
-            console.log("🎟️  [STATUS] Coupon used_count incremented:", notes.coupon_code);
-          }
-        } catch (_) {}
-      }
-
-      // 5. WhatsApp notification (fire-and-forget)
-      if (notes.user_mobile_num) {
-        console.log("📱 [STATUS] Sending WhatsApp to:", notes.user_mobile_num);
-        sendWhatsAppNotification(notes.user_mobile_num, shopmozoOrderId, payment.amount / 100);
+    // ── STEP 5: Coupon usage ──────────────────────────────────────────────────
+    if (notes.coupon_code) {
+      try {
+        const coupon = await couponModel.findCouponByCode(notes.coupon_code);
+        if (coupon) {
+          await couponModel.incrementUsedCount(coupon.id);
+          console.log("🎟️  [STATUS] Coupon incremented:", notes.coupon_code);
+        }
+      } catch (couponErr) {
+        console.error("⚠️  [STATUS] Coupon update error (non-fatal):", couponErr.message);
       }
     }
 
-    // 6. Update DB
+    // ── STEP 6: WhatsApp notification (fire-and-forget) ───────────────────────
+    if (notes.user_mobile_num) {
+      console.log("📱 [STATUS] Sending WhatsApp to:", notes.user_mobile_num);
+      sendWhatsAppNotification(notes.user_mobile_num, shopmozoOrderId, payment.amount / 100);
+    }
+  }
+
+  // ── STEP 7: DB Update ─────────────────────────────────────────────────────
+  try {
     console.log("💾 [STATUS] Updating DB record...");
     const [dbResult] = await withConnection((conn) =>
       conn.execute(
         `UPDATE gauswarn_payment
          SET status=?, paymentDetails=?, isPaymentPaid=?, razorpay_payment_id=?, shopmozo_order_id=?
-         WHERE id=?`,
+         WHERE user_id=?`,
         [payment.status, JSON.stringify(payment), isPaid ? 1 : 0, razorpay_payment_id, shopmozoOrderId, notes.userId]
       )
     );
     console.log("💾 [STATUS] DB affectedRows:", dbResult?.affectedRows);
-    console.log("✅ [STATUS] Done — userId:", notes.userId, "| status:", payment.status);
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-
-    res.json({
-      success: isPaid,
-      message: isPaid ? "Payment successful" : "Payment authorized but not captured",
-      payment_status: payment.status,
-      shopmozo_order_id: shopmozoOrderId,
-    });
-  } catch (err) {
-    console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.error("❌ [STATUS] VERIFY ERROR:", err.message);
-    console.error(err.stack);
-    console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    res.status(500).json({ success: false, message: "Verification failed" });
+  } catch (dbUpdateErr) {
+    console.error("⚠️  [STATUS] DB update error (non-fatal):", dbUpdateErr.message);
+    // Payment was already confirmed by Razorpay — still send success to user
   }
+
+  console.log("✅ [STATUS] Done — userId:", notes.userId, "| status:", payment.status);
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+  // ── RESPONSE — always send if signature + Razorpay fetch succeeded ─────────
+  res.json({
+    success: isPaid,
+    message: isPaid ? "Payment successful" : "Payment authorized but not captured",
+    payment_status: payment.status,
+    shopmozo_order_id: shopmozoOrderId,
+  });
 };
+
+
 
 /* =============================
    RAZORPAY WEBHOOK HANDLER
@@ -341,14 +364,22 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
 ============================= */
 const handleRazorpayWebhook = async (req, res) => {
   try {
-    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    // express.raw() gives us a Buffer — parse it for use
+    const rawBody = req.body instanceof Buffer ? req.body : Buffer.from(JSON.stringify(req.body));
+    let payload;
+    try {
+      payload = JSON.parse(rawBody.toString());
+    } catch (_) {
+      return res.status(400).json({ success: false, message: "Invalid JSON body" });
+    }
 
-    // Verify webhook signature
+    // 1. Verify webhook signature using raw bytes (not re-stringified JSON)
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
     if (webhookSecret) {
       const razorpaySignature = req.headers["x-razorpay-signature"];
       const expectedSignature = crypto
         .createHmac("sha256", webhookSecret)
-        .update(JSON.stringify(req.body))
+        .update(rawBody)           // ← raw bytes, not JSON.stringify(req.body)
         .digest("hex");
 
       if (razorpaySignature !== expectedSignature) {
@@ -357,65 +388,82 @@ const handleRazorpayWebhook = async (req, res) => {
       }
     }
 
-    const event = req.body.event;
-    const paymentEntity = req.body.payload?.payment?.entity;
+    const event = payload.event;
+    const paymentEntity = payload.payload?.payment?.entity;
 
     console.log("📩 [WEBHOOK] Event:", event, "| payment_id:", paymentEntity?.id);
 
+    // 2. payment.captured — payment successful
     if (event === "payment.captured" && paymentEntity) {
       const notes = paymentEntity.notes || {};
       const userId = notes.userId;
-      let shopmozoOrderId = null;
 
       if (userId) {
-        const [[userRow]] = await withConnection((conn) =>
-          conn.execute("SELECT * FROM gauswarn_payment WHERE id=?", [userId])
+        // Idempotency check — skip if already processed by /status endpoint
+        const [[existingRow]] = await withConnection((conn) =>
+          conn.execute("SELECT user_id, isPaymentPaid FROM gauswarn_payment WHERE user_id=?", [userId])
         );
 
-        if (userRow) {
-          let cart = [];
-          try { cart = JSON.parse(userRow.cart_data || "[]"); } catch (_) {}
-          shopmozoOrderId = await generateShopmozoOrder(userRow, cart, moment().format("YYYY-MM-DD"));
-        }
+        if (!existingRow) {
+          console.warn("⚠️ [WEBHOOK] No DB record for userId:", userId);
+        } else if (existingRow.isPaymentPaid == 1) {
+          console.log("⏭️  [WEBHOOK] Already paid by /status — skipping duplicate processing");
+        } else {
+          // Not yet processed — create Shopmozo + update DB
+          let shopmozoOrderId = null;
+          const [[userRow]] = await withConnection((conn) =>
+            conn.execute("SELECT * FROM gauswarn_payment WHERE user_id=?", [userId])
+          );
 
-        await withConnection((conn) =>
-          conn.execute(
-            `UPDATE gauswarn_payment
-             SET status=?, paymentDetails=?, isPaymentPaid=1, razorpay_payment_id=?, shopmozo_order_id=?
-             WHERE id=?`,
-            [paymentEntity.status, JSON.stringify(paymentEntity), paymentEntity.id, shopmozoOrderId, userId]
-          )
-        );
+          if (userRow) {
+            let cart = [];
+            try { cart = JSON.parse(userRow.cart_data || "[]"); } catch (_) {}
+            shopmozoOrderId = await generateShopmozoOrder(userRow, cart, moment().format("YYYY-MM-DD"));
+            console.log("📦 [WEBHOOK] Shopmozo order:", shopmozoOrderId);
+          }
 
-        if (notes.coupon_code) {
-          try {
-            const coupon = await couponModel.findCouponByCode(notes.coupon_code);
-            if (coupon) await couponModel.incrementUsedCount(coupon.id);
-          } catch (_) {}
-        }
+          await withConnection((conn) =>
+            conn.execute(
+              `UPDATE gauswarn_payment
+               SET status=?, paymentDetails=?, isPaymentPaid=1, razorpay_payment_id=?, shopmozo_order_id=?
+               WHERE user_id=?`,
+              [paymentEntity.status, JSON.stringify(paymentEntity), paymentEntity.id, shopmozoOrderId, userId]
+            )
+          );
+          console.log("✅ [WEBHOOK] DB updated for userId:", userId);
 
-        if (notes.user_mobile_num) {
-          sendWhatsAppNotification(notes.user_mobile_num, shopmozoOrderId, paymentEntity.amount / 100);
+          if (notes.coupon_code) {
+            try {
+              const coupon = await couponModel.findCouponByCode(notes.coupon_code);
+              if (coupon) await couponModel.incrementUsedCount(coupon.id);
+            } catch (_) {}
+          }
+
+          if (notes.user_mobile_num) {
+            sendWhatsAppNotification(notes.user_mobile_num, shopmozoOrderId, paymentEntity.amount / 100);
+          }
         }
       }
     }
 
+    // 3. payment.failed — update status to failed
     if (event === "payment.failed" && paymentEntity) {
       const userId = paymentEntity.notes?.userId;
       if (userId) {
         await withConnection((conn) =>
           conn.execute(
-            "UPDATE gauswarn_payment SET status='failed', isPaymentPaid=0, razorpay_payment_id=? WHERE id=?",
+            "UPDATE gauswarn_payment SET status='failed', isPaymentPaid=0, razorpay_payment_id=? WHERE user_id=?",
             [paymentEntity.id, userId]
           )
         );
+        console.log("❌ [WEBHOOK] Payment failed, DB updated for userId:", userId);
       }
     }
 
     // Always 200 — Razorpay retries on non-200
     res.status(200).json({ success: true, received: true });
   } catch (err) {
-    console.error("❌ [WEBHOOK] Error:", err.message);
+    console.error("❌ [WEBHOOK] Error:", err.message, err.stack);
     res.status(200).json({ success: false, message: "Webhook processing error" });
   }
 };
