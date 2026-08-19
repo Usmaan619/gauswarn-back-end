@@ -108,6 +108,10 @@ async function runMigrations() {
 
     const migrations = [
       {
+        table: "gauswarn_payment",
+        columns: ["paymentDetails", "cart_data"],
+      },
+      {
         table: "gauswarn_home_banners",
         columns: ["banner1", "banner2", "banner3", "banner4"],
       },
