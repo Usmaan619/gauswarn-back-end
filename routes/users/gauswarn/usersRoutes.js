@@ -18,6 +18,7 @@ const {
 const {
   createPaymentAndGenerateUrlRazor,
   getRazorpayStatusAndUpdatePayment,
+  handleRazorpayWebhook,
 } = require("../../../controllers/users/gauswarn/razerpayPaymentController");
 
 const {
@@ -88,6 +89,7 @@ router.post("/coupons/apply", applyCoupon);
 // razorpay
 router.post("/create-order", createPaymentAndGenerateUrlRazor);
 router.post("/status", getRazorpayStatusAndUpdatePayment);
+router.post("/webhook/razorpay", handleRazorpayWebhook);
 
 router.use(errorHandler);
 

@@ -366,6 +366,7 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
       req.body?.rzpResponse || {};
     const notes = req.body?.notes || {};
 
+    console.log("🔍 [STATUS] Verifying payment. order_id:", razorpay_order_id, "payment_id:", razorpay_payment_id, "notes.userId:", notes.userId);
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return res.status(400).json({
@@ -381,6 +382,8 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
       .update(body)
       .digest("hex");
 
+    console.log("🔐 [STATUS] Signature match:", expectedSignature === razorpay_signature);
+
     if (expectedSignature !== razorpay_signature) {
       return res.status(400).json({
         success: false,
@@ -391,31 +394,40 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
     // Fetch payment details
     const payment = await razorpay.payments.fetch(razorpay_payment_id);
     const isPaid = payment.status === "captured";
+    console.log("💳 [STATUS] Payment status from Razorpay:", payment.status);
 
     let shopmozoOrderId = null;
 
     if (isPaid) {
-      // Fetch user data
+      // Fetch user data — notes.userId is a string from Razorpay notes
       const [[userRow]] = await withConnection((conn) =>
-        conn.execute(`SELECT * FROM gauswarn_payment WHERE user_id=?`, [
+        conn.execute(`SELECT * FROM gauswarn_payment WHERE id=?`, [
           notes.userId,
         ]),
       );
 
-      // Create Shopmozo order
-      shopmozoOrderId = await generateShopmozoOrder(
-        userRow,
-        JSON.parse(userRow.cart_data || "[]"),
-        moment().format("YYYY-MM-DD"),
-      );
+      console.log("🗄️ [STATUS] userRow found:", userRow ? "yes" : "NO — userId may be wrong!");
+
+      if (!userRow) {
+        console.error("❌ [STATUS] No payment record found for userId:", notes.userId);
+        // Still proceed to update by razorpay_payment_id if possible
+      } else {
+        // Create Shopmozo order
+        shopmozoOrderId = await generateShopmozoOrder(
+          userRow,
+          JSON.parse(userRow.cart_data || "[]"),
+          moment().format("YYYY-MM-DD"),
+        );
+        console.log("📦 [STATUS] Shopmozo order ID:", shopmozoOrderId);
+      }
     }
 
     // Update database
-    await withConnection((conn) =>
+    const [updateResult] = await withConnection((conn) =>
       conn.execute(
         `UPDATE gauswarn_payment
          SET status=?, paymentDetails=?, isPaymentPaid=?, razorpay_payment_id=?, shopmozo_order_id=?
-         WHERE user_id=?`,
+         WHERE id=?`,
         [
           payment.status,
           JSON.stringify(payment),
@@ -426,7 +438,8 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
         ],
       ),
     );
-    
+    console.log("✅ [STATUS] DB update affectedRows:", updateResult?.affectedRows);
+
     // Increment coupon used_count if payment successful
     if (isPaid && notes.coupon_code) {
       try {
@@ -435,6 +448,7 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
           await couponModel.incrementUsedCount(coupon.id);
         }
       } catch (couponErr) {
+        console.warn("⚠️ [STATUS] Coupon update failed:", couponErr.message);
       }
     }
 
@@ -447,7 +461,6 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
       );
     }
 
-
     res.json({
       success: isPaid,
       message: isPaid ? "Payment successful" : "Payment authorized",
@@ -455,9 +468,11 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
       shopmozo_order_id: shopmozoOrderId,
     });
   } catch (err) {
+    console.error("❌ [STATUS] VERIFY ERROR:", err.message, err.stack);
     res.status(500).json({
       success: false,
       message: "Verification failed",
+      debug: err.message, // remove this line in production after debugging
     });
   }
 };
@@ -561,10 +576,127 @@ const checkRazorpayPaymentStatus = async (req, res) => {
 };
 
 /* =============================
+   RAZORPAY WEBHOOK HANDLER
+============================= */
+const handleRazorpayWebhook = async (req, res) => {
+  try {
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+    // 1️⃣ Verify webhook signature from Razorpay
+    if (webhookSecret) {
+      const razorpaySignature = req.headers["x-razorpay-signature"];
+      const expectedSignature = crypto
+        .createHmac("sha256", webhookSecret)
+        .update(JSON.stringify(req.body))
+        .digest("hex");
+
+      if (razorpaySignature !== expectedSignature) {
+        console.warn("⚠️ [WEBHOOK] Invalid signature — request rejected");
+        return res.status(400).json({ success: false, message: "Invalid webhook signature" });
+      }
+    }
+
+    const event = req.body.event;
+    const paymentEntity = req.body.payload?.payment?.entity;
+    const orderEntity = req.body.payload?.order?.entity;
+
+    console.log("📩 [WEBHOOK] Event received:", event, "| payment_id:", paymentEntity?.id);
+
+    // 2️⃣ Handle payment.captured event (payment successful)
+    if (event === "payment.captured" && paymentEntity) {
+      const razorpay_payment_id = paymentEntity.id;
+      const notes = paymentEntity.notes || {};
+      const userId = notes.userId;
+
+      console.log("✅ [WEBHOOK] Payment captured for userId:", userId);
+
+      let shopmozoOrderId = null;
+
+      if (userId) {
+        const [[userRow]] = await withConnection((conn) =>
+          conn.execute(`SELECT * FROM gauswarn_payment WHERE id=?`, [userId]),
+        );
+
+        if (userRow) {
+          shopmozoOrderId = await generateShopmozoOrder(
+            userRow,
+            JSON.parse(userRow.cart_data || "[]"),
+            moment().format("YYYY-MM-DD"),
+          );
+          console.log("📦 [WEBHOOK] Shopmozo order created:", shopmozoOrderId);
+        } else {
+          console.warn("⚠️ [WEBHOOK] No DB record found for userId:", userId);
+        }
+      }
+
+      // Update DB
+      await withConnection((conn) =>
+        conn.execute(
+          `UPDATE gauswarn_payment
+           SET status=?, paymentDetails=?, isPaymentPaid=1, razorpay_payment_id=?, shopmozo_order_id=?
+           WHERE id=?`,
+          [
+            paymentEntity.status,
+            JSON.stringify(paymentEntity),
+            razorpay_payment_id,
+            shopmozoOrderId,
+            userId,
+          ],
+        ),
+      );
+
+      // Coupon increment
+      if (notes.coupon_code) {
+        try {
+          const coupon = await couponModel.findCouponByCode(notes.coupon_code);
+          if (coupon) await couponModel.incrementUsedCount(coupon.id);
+        } catch (e) {
+          console.warn("⚠️ [WEBHOOK] Coupon update failed:", e.message);
+        }
+      }
+
+      // WhatsApp notification
+      if (notes.user_mobile_num) {
+        sendWhatsAppNotification(
+          notes.user_mobile_num,
+          shopmozoOrderId,
+          paymentEntity.amount / 100,
+        );
+      }
+    }
+
+    // 3️⃣ Handle payment.failed event
+    if (event === "payment.failed" && paymentEntity) {
+      const notes = paymentEntity.notes || {};
+      const userId = notes.userId;
+
+      console.log("❌ [WEBHOOK] Payment failed for userId:", userId);
+
+      if (userId) {
+        await withConnection((conn) =>
+          conn.execute(
+            `UPDATE gauswarn_payment SET status='failed', isPaymentPaid=0, razorpay_payment_id=? WHERE id=?`,
+            [paymentEntity.id, userId],
+          ),
+        );
+      }
+    }
+
+    // Always return 200 to Razorpay — else it retries
+    res.status(200).json({ success: true, received: true });
+  } catch (err) {
+    console.error("❌ [WEBHOOK] Error:", err.message, err.stack);
+    // Still return 200 to prevent Razorpay from retrying unnecessarily
+    res.status(200).json({ success: false, message: "Webhook processing error" });
+  }
+};
+
+/* =============================
    EXPORTS
 ============================= */
 module.exports = {
   createPaymentAndGenerateUrlRazor,
   getRazorpayStatusAndUpdatePayment,
   checkRazorpayPaymentStatus,
+  handleRazorpayWebhook,
 };
