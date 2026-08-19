@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon server.js",
-    "dev": "nodemon --inspect server.js"
+    "dev": "nodemon --inspect server.js",
+    "migrate": "node scripts/migrate.js"
   },
   "author": "Razik khan",
   "license": "MIT",
