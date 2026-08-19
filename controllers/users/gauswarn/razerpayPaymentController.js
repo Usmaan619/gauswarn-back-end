@@ -237,7 +237,15 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
       req.body?.rzpResponse || {};
     const notes = req.body?.notes || {};
 
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("🔍 [STATUS] Payment verify request");
+    console.log("   order_id  :", razorpay_order_id);
+    console.log("   payment_id:", razorpay_payment_id);
+    console.log("   userId    :", notes.userId);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      console.warn("⚠️ [STATUS] Missing params — rejecting");
       return res.status(400).json({ success: false, message: "Missing Razorpay params" });
     }
 
@@ -247,48 +255,60 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest("hex");
 
-    if (expectedSignature !== razorpay_signature) {
-      console.warn("⚠️ Invalid Razorpay signature for payment:", razorpay_payment_id);
+    const signatureMatch = expectedSignature === razorpay_signature;
+    console.log("🔐 [STATUS] Signature match:", signatureMatch ? "✅ YES" : "❌ NO");
+
+    if (!signatureMatch) {
       return res.status(400).json({ success: false, message: "Invalid signature" });
     }
 
     // 2. Fetch payment from Razorpay
+    console.log("📡 [STATUS] Fetching payment from Razorpay...");
     const payment = await razorpay.payments.fetch(razorpay_payment_id);
     const isPaid = payment.status === "captured";
-    console.log("💳 Payment status:", payment.status, "| id:", razorpay_payment_id);
+    console.log("💳 [STATUS] Razorpay status:", payment.status, "| isPaid:", isPaid);
 
     let shopmozoOrderId = null;
 
     if (isPaid) {
       // 3. Get user's saved order from DB
+      console.log("🗄️  [STATUS] Fetching order from DB for userId:", notes.userId);
       const [[userRow]] = await withConnection((conn) =>
         conn.execute("SELECT * FROM gauswarn_payment WHERE id=?", [notes.userId])
       );
 
       if (userRow) {
+        console.log("🗄️  [STATUS] DB record found ✅");
         let cart = [];
         try { cart = JSON.parse(userRow.cart_data || "[]"); } catch (_) {}
+        console.log("📦 [STATUS] Creating Shopmozo order...");
         shopmozoOrderId = await generateShopmozoOrder(userRow, cart, moment().format("YYYY-MM-DD"));
+        console.log("📦 [STATUS] Shopmozo order ID:", shopmozoOrderId);
       } else {
-        console.warn("⚠️ No payment record found for userId:", notes.userId);
+        console.warn("⚠️  [STATUS] No DB record found for userId:", notes.userId);
       }
 
       // 4. Increment coupon usage
       if (notes.coupon_code) {
         try {
           const coupon = await couponModel.findCouponByCode(notes.coupon_code);
-          if (coupon) await couponModel.incrementUsedCount(coupon.id);
+          if (coupon) {
+            await couponModel.incrementUsedCount(coupon.id);
+            console.log("🎟️  [STATUS] Coupon used_count incremented:", notes.coupon_code);
+          }
         } catch (_) {}
       }
 
       // 5. WhatsApp notification (fire-and-forget)
       if (notes.user_mobile_num) {
+        console.log("📱 [STATUS] Sending WhatsApp to:", notes.user_mobile_num);
         sendWhatsAppNotification(notes.user_mobile_num, shopmozoOrderId, payment.amount / 100);
       }
     }
 
     // 6. Update DB
-    await withConnection((conn) =>
+    console.log("💾 [STATUS] Updating DB record...");
+    const [dbResult] = await withConnection((conn) =>
       conn.execute(
         `UPDATE gauswarn_payment
          SET status=?, paymentDetails=?, isPaymentPaid=?, razorpay_payment_id=?, shopmozo_order_id=?
@@ -296,8 +316,9 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
         [payment.status, JSON.stringify(payment), isPaid ? 1 : 0, razorpay_payment_id, shopmozoOrderId, notes.userId]
       )
     );
-
-    console.log("✅ Payment verified & DB updated. userId:", notes.userId, "| status:", payment.status);
+    console.log("💾 [STATUS] DB affectedRows:", dbResult?.affectedRows);
+    console.log("✅ [STATUS] Done — userId:", notes.userId, "| status:", payment.status);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
     res.json({
       success: isPaid,
@@ -306,7 +327,10 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
       shopmozo_order_id: shopmozoOrderId,
     });
   } catch (err) {
-    console.error("❌ Verify payment error:", err.message, "\n", err.stack);
+    console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.error("❌ [STATUS] VERIFY ERROR:", err.message);
+    console.error(err.stack);
+    console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     res.status(500).json({ success: false, message: "Verification failed" });
   }
 };
