@@ -4,8 +4,9 @@ const { v4: uuidv4 } = require("uuid");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const moment = require("moment");
-const { withConnection } = require("../../../utils/helper");
+const { withConnection, createEmailTransporter } = require("../../../utils/helper");
 const couponModel = require("../../../model/coupons/couponModel");
+const { orderConfirmationTemplate } = require("../../../emailTemplates/orderConfirmationTemplate");
 
 /* =============================
    RAZORPAY INSTANCE
@@ -30,6 +31,27 @@ const sendWhatsAppNotification = async (mobile, orderId, amount) => {
     await axios.get(url, { timeout: 5000 });
   } catch (_) {
     // Never fail a payment due to WhatsApp errors
+  }
+};
+
+/* =============================
+   SEND ORDER CONFIRMATION EMAIL
+   Fire-and-forget — never blocks payment response
+============================= */
+const sendOrderConfirmationEmail = async (orderData) => {
+  try {
+    const transporter = await createEmailTransporter();
+    const htmlContent = orderConfirmationTemplate(orderData);
+
+    await transporter.sendMail({
+      from: `"Gauswarn" <${process.env.SMTP_SIW_USER}>`,
+      to: orderData.user_email,
+      subject: `✅ Order Confirmed — ${orderData.order_id} | Gauswarn`,
+      html: htmlContent,
+    });
+    console.log("📧 [EMAIL] Order confirmation sent to:", orderData.user_email);
+  } catch (emailErr) {
+    console.error("⚠️  [EMAIL] Failed to send order confirmation (non-fatal):", emailErr.message);
   }
 };
 
@@ -197,12 +219,12 @@ const createPaymentAndGenerateUrlRazor = async (req, res) => {
       receipt: tempOrderId,
       notes: {
         userId: userId.toString(),
-        user_name: userData.user_name,
-        user_email: userData.user_email,
-        user_mobile_num: userData.user_mobile_num,
-        cart: userData.cart || [],
-        coupon_code: userData.coupon_code || null,
-        discount_amount: userData.discount_amount || 0,
+        user_name: String(userData.user_name || "").substring(0, 255),
+        user_email: String(userData.user_email || "").substring(0, 255),
+        user_mobile_num: String(userData.user_mobile_num || "").substring(0, 255),
+        // ❌ REMOVED: cart - Razorpay has a strict 256 char limit for notes. Cart has base64 images!
+        coupon_code: String(userData.coupon_code || "").substring(0, 255),
+        discount_amount: String(userData.discount_amount || 0).substring(0, 255),
       },
     });
 
@@ -222,8 +244,9 @@ const createPaymentAndGenerateUrlRazor = async (req, res) => {
       timestamp: moment().format("MMMM Do YYYY, h:mm:ss a"),
     });
   } catch (err) {
-    console.error("❌ Payment init error:", err.message);
-    res.status(400).json({ success: false, message: err.message || "Payment initiation failed" });
+    const errorMsg = err.error?.description || err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
+    console.error("❌ Payment init error (Razorpay):", errorMsg);
+    res.status(400).json({ success: false, message: errorMsg || "Payment initiation failed", raw_error: err });
   }
 };
 
@@ -295,7 +318,7 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
       if (userRow) {
         console.log("🗄️  [STATUS] DB record found ✅");
         let cart = [];
-        try { cart = JSON.parse(userRow.cart_data || "[]"); } catch (_) {}
+        try { cart = JSON.parse(userRow.cart_data || "[]"); } catch (_) { }
         console.log("📦 [STATUS] Creating Shopmozo order...");
         shopmozoOrderId = await generateShopmozoOrder(userRow, cart, moment().format("YYYY-MM-DD"));
         console.log("📦 [STATUS] Shopmozo order ID:", shopmozoOrderId);
@@ -328,6 +351,7 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
   }
 
   // ── STEP 7: DB Update ─────────────────────────────────────────────────────
+  let dbUserRow = null;
   try {
     console.log("💾 [STATUS] Updating DB record...");
     const [dbResult] = await withConnection((conn) =>
@@ -339,9 +363,60 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
       )
     );
     console.log("💾 [STATUS] DB affectedRows:", dbResult?.affectedRows);
+
+    // Fetch full record for email + response
+    if (isPaid) {
+      const [[row]] = await withConnection((conn) =>
+        conn.execute("SELECT * FROM gauswarn_payment WHERE user_id=?", [notes.userId])
+      );
+      dbUserRow = row;
+    }
   } catch (dbUpdateErr) {
     console.error("⚠️  [STATUS] DB update error (non-fatal):", dbUpdateErr.message);
     // Payment was already confirmed by Razorpay — still send success to user
+  }
+
+  // ── STEP 8: Build orderData for email + frontend PDF ────────────────────────
+  let orderData = null;
+  if (isPaid) {
+    let cart = [];
+    try {
+      if (notes.cart && Array.isArray(notes.cart) && notes.cart.length > 0) {
+        cart = notes.cart;
+      } else if (notes.cart && typeof notes.cart === 'string') {
+        cart = JSON.parse(notes.cart);
+      } else if (dbUserRow && dbUserRow.cart_data) {
+        cart = JSON.parse(dbUserRow.cart_data);
+      }
+    } catch (_) {
+      console.error("⚠️ Error parsing cart for orderData");
+    }
+
+    const subtotal = cart.reduce((sum, item) => (item.product_price || 0) * (item.product_quantity || 1) + sum, 0);
+    const discountAmt = Number(notes.discount_amount) || (dbUserRow ? Number(dbUserRow.discount_amount) : 0) || 0;
+
+    orderData = {
+      order_id: shopmozoOrderId || `ORD-${notes.userId}`,
+      user_name: dbUserRow?.user_name || notes.user_name || "",
+      user_email: dbUserRow?.user_email || notes.user_email || "",
+      user_mobile_num: dbUserRow?.user_mobile_num || notes.user_mobile_num || "",
+      user_house_number: dbUserRow?.user_house_number || "",
+      user_landmark: dbUserRow?.user_landmark || "",
+      user_city: dbUserRow?.user_city || "",
+      user_state: dbUserRow?.user_state || "",
+      user_country: dbUserRow?.user_country || "",
+      user_pincode: dbUserRow?.user_pincode || "",
+      cart,
+      subtotal,
+      discount: discountAmt,
+      coupon_code: notes.coupon_code || (dbUserRow ? dbUserRow.coupon_code : null),
+      total_amount: dbUserRow ? Number(dbUserRow.final_payable_amount || dbUserRow.user_total_amount) : (payment.amount / 100),
+      payment_id: razorpay_payment_id,
+      date: moment().format("DD MMM YYYY"),
+    };
+
+    // ── STEP 9: Send order confirmation email (fire-and-forget) ─────────────
+    sendOrderConfirmationEmail(orderData);
   }
 
   console.log("✅ [STATUS] Done — userId:", notes.userId, "| status:", payment.status);
@@ -353,6 +428,7 @@ const getRazorpayStatusAndUpdatePayment = async (req, res) => {
     message: isPaid ? "Payment successful" : "Payment authorized but not captured",
     payment_status: payment.status,
     shopmozo_order_id: shopmozoOrderId,
+    orderData,
   });
 };
 
@@ -417,7 +493,7 @@ const handleRazorpayWebhook = async (req, res) => {
 
           if (userRow) {
             let cart = [];
-            try { cart = JSON.parse(userRow.cart_data || "[]"); } catch (_) {}
+            try { cart = JSON.parse(userRow.cart_data || "[]"); } catch (_) { }
             shopmozoOrderId = await generateShopmozoOrder(userRow, cart, moment().format("YYYY-MM-DD"));
             console.log("📦 [WEBHOOK] Shopmozo order:", shopmozoOrderId);
           }
@@ -436,7 +512,33 @@ const handleRazorpayWebhook = async (req, res) => {
             try {
               const coupon = await couponModel.findCouponByCode(notes.coupon_code);
               if (coupon) await couponModel.incrementUsedCount(coupon.id);
-            } catch (_) {}
+            } catch (_) { }
+          }
+
+          // ── Send order email from webhook (backup if /status didn't send) ──
+          if (userRow) {
+            let emailCart = [];
+            try { emailCart = JSON.parse(userRow.cart_data || "[]"); } catch (_) { }
+            const emailSubtotal = emailCart.reduce((s, i) => (i.product_price || 0) * (i.product_quantity || 1) + s, 0);
+            sendOrderConfirmationEmail({
+              order_id: shopmozoOrderId || `ORD-${userId}`,
+              user_name: userRow.user_name,
+              user_email: userRow.user_email,
+              user_mobile_num: userRow.user_mobile_num,
+              user_house_number: userRow.user_house_number,
+              user_landmark: userRow.user_landmark,
+              user_city: userRow.user_city,
+              user_state: userRow.user_state,
+              user_country: userRow.user_country,
+              user_pincode: userRow.user_pincode,
+              cart: emailCart,
+              subtotal: emailSubtotal,
+              discount: Number(userRow.discount_amount) || 0,
+              coupon_code: userRow.coupon_code,
+              total_amount: Number(userRow.final_payable_amount || userRow.user_total_amount),
+              payment_id: paymentEntity.id,
+              date: moment().format("DD MMM YYYY"),
+            });
           }
 
           if (notes.user_mobile_num) {
