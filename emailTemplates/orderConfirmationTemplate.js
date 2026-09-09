@@ -28,22 +28,22 @@ const orderConfirmationTemplate = (orderData) => {
     .map(
       (item, index) => `
       <tr>
-        <td style="padding: 12px 8px; border-bottom: 1px solid #f0e6d3; color: #4a3728; font-size: 14px;">
+        <td style="padding: 12px 4px; border-bottom: 1px solid #f0e6d3; color: #4a3728; font-size: 13px;">
           ${index + 1}
         </td>
-        <td style="padding: 12px 8px; border-bottom: 1px solid #f0e6d3; color: #4a3728; font-size: 14px;">
+        <td style="padding: 12px 4px; border-bottom: 1px solid #f0e6d3; color: #4a3728; font-size: 13px;">
           ${item.product_name || item.name || "A2 Cow Ghee"}
         </td>
-        <td style="padding: 12px 8px; border-bottom: 1px solid #f0e6d3; color: #4a3728; font-size: 14px; text-align: center;">
+        <td style="padding: 12px 4px; border-bottom: 1px solid #f0e6d3; color: #4a3728; font-size: 13px; text-align: center;">
           ${item.product_weight || "-"}
         </td>
-        <td style="padding: 12px 8px; border-bottom: 1px solid #f0e6d3; color: #4a3728; font-size: 14px; text-align: center;">
+        <td style="padding: 12px 4px; border-bottom: 1px solid #f0e6d3; color: #4a3728; font-size: 13px; text-align: center;">
           ${item.product_quantity || 1}
         </td>
-        <td style="padding: 12px 8px; border-bottom: 1px solid #f0e6d3; color: #4a3728; font-size: 14px; text-align: right;">
+        <td style="padding: 12px 4px; border-bottom: 1px solid #f0e6d3; color: #4a3728; font-size: 13px; text-align: right;">
           ₹${item.product_price || 0}
         </td>
-        <td style="padding: 12px 8px; border-bottom: 1px solid #f0e6d3; color: #4a3728; font-size: 14px; text-align: right; font-weight: 600;">
+        <td style="padding: 12px 4px; border-bottom: 1px solid #f0e6d3; color: #4a3728; font-size: 13px; text-align: right; font-weight: 600;">
           ₹${(item.product_price || 0) * (item.product_quantity || 1)}
         </td>
       </tr>`
@@ -74,11 +74,15 @@ const orderConfirmationTemplate = (orderData) => {
 
     table {
       border-collapse: collapse;
+      mso-table-lspace: 0pt;
+      mso-table-rspace: 0pt;
     }
 
     img {
       border: none;
       max-width: 100%;
+      outline: none;
+      text-decoration: none;
     }
 
     @media only screen and (max-width: 600px) {
@@ -86,11 +90,21 @@ const orderConfirmationTemplate = (orderData) => {
         width: 100% !important;
       }
       .content-cell {
-        padding: 24px 16px !important;
+        padding: 20px 12px !important;
       }
-      .cart-table td {
-        padding: 8px 4px !important;
-        font-size: 12px !important;
+      .cart-table th, .cart-table td {
+        padding: 8px 2px !important;
+        font-size: 11px !important;
+      }
+      .order-info-td {
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        border-right: none !important;
+        border-bottom: 1px solid #f0e6d3 !important;
+      }
+      .order-info-td:last-child {
+        border-bottom: none !important;
       }
     }
   </style>
@@ -98,14 +112,13 @@ const orderConfirmationTemplate = (orderData) => {
 <body style="background-color: #fdf8f0; margin: 0; padding: 0;">
   <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background-color: #fdf8f0;">
     <tr>
-      <td align="center" style="padding: 24px 12px;">
+      <td align="center" style="padding: 20px 8px;">
         <!-- Main Container -->
-        <table class="email-container" width="600" cellpadding="0" cellspacing="0" role="presentation" style="max-width: 600px; width: 100%;">
+        <table class="email-container" width="600" cellpadding="0" cellspacing="0" role="presentation" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
           
           <!-- Header Banner -->
           <tr>
-            <td style="background: linear-gradient(135deg, #8B6914 0%, #a67c2e 50%, #c4993d 100%); border-radius: 16px 16px 0 0; padding: 32px 24px; text-align: center;">
-              <img src="https://gauswarn.com/favicon-512x512.png" alt="Gauswarn" width="64" height="64" style="border-radius: 12px; margin-bottom: 12px;" />
+            <td style="background: #8B6914; padding: 24px 16px; text-align: center;">
               <h1 style="color: #ffffff; font-size: 24px; font-weight: 700; margin: 0 0 4px; letter-spacing: 1px;">GAUSWARN</h1>
               <p style="color: #f5e6c8; font-size: 13px; margin: 0; letter-spacing: 2px;">PURE A2 GIR COW GHEE</p>
             </td>
@@ -113,29 +126,33 @@ const orderConfirmationTemplate = (orderData) => {
 
           <!-- Success Icon + Message -->
           <tr>
-            <td style="background-color: #ffffff; padding: 32px 24px 16px; text-align: center;">
-              <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #22c55e, #16a34a); border-radius: 50%; margin: 0 auto 16px; display: inline-flex; align-items: center; justify-content: center;">
-                <span style="color: #fff; font-size: 32px; line-height: 64px;">✓</span>
-              </div>
-              <h2 style="color: #1a1a1a; font-size: 22px; font-weight: 700; margin: 0 0 8px;">Order Confirmed!</h2>
+            <td style="padding: 32px 16px 16px; text-align: center;">
+              <table border="0" cellpadding="0" cellspacing="0" align="center" style="margin: 0 auto;">
+                <tr>
+                  <td align="center" valign="middle" style="width: 60px; height: 60px; background-color: #22c55e; border-radius: 50%;">
+                    <span style="color: #ffffff; font-size: 30px; font-weight: bold; line-height: 60px; display: block; text-align: center;">✓</span>
+                  </td>
+                </tr>
+              </table>
+              <h2 style="color: #1a1a1a; font-size: 22px; font-weight: 700; margin: 16px 0 8px;">Order Confirmed!</h2>
               <p style="color: #6b7280; font-size: 15px; margin: 0;">Thank you for your purchase, <strong style="color: #8B6914;">${user_name}</strong>!</p>
             </td>
           </tr>
 
           <!-- Order Info Bar -->
           <tr>
-            <td style="background-color: #ffffff; padding: 0 24px;">
-              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fef9ee; border-radius: 10px; border: 1px solid #f0e6d3;">
+            <td style="padding: 0 16px 16px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fef9ee; border-radius: 8px; border: 1px solid #f0e6d3;">
                 <tr>
-                  <td style="padding: 14px 16px; text-align: center; border-right: 1px solid #f0e6d3;">
+                  <td class="order-info-td" style="padding: 12px; text-align: center; border-right: 1px solid #f0e6d3;">
                     <p style="color: #9ca3af; font-size: 11px; margin: 0 0 2px; text-transform: uppercase; letter-spacing: 1px;">Order ID</p>
                     <p style="color: #8B6914; font-size: 13px; font-weight: 600; margin: 0; word-break: break-all;">${order_id}</p>
                   </td>
-                  <td style="padding: 14px 16px; text-align: center; border-right: 1px solid #f0e6d3;">
+                  <td class="order-info-td" style="padding: 12px; text-align: center; border-right: 1px solid #f0e6d3;">
                     <p style="color: #9ca3af; font-size: 11px; margin: 0 0 2px; text-transform: uppercase; letter-spacing: 1px;">Date</p>
                     <p style="color: #4a3728; font-size: 13px; font-weight: 600; margin: 0;">${date}</p>
                   </td>
-                  <td style="padding: 14px 16px; text-align: center;">
+                  <td class="order-info-td" style="padding: 12px; text-align: center;">
                     <p style="color: #9ca3af; font-size: 11px; margin: 0 0 2px; text-transform: uppercase; letter-spacing: 1px;">Payment ID</p>
                     <p style="color: #4a3728; font-size: 13px; font-weight: 600; margin: 0; word-break: break-all;">${payment_id}</p>
                   </td>
@@ -146,48 +163,49 @@ const orderConfirmationTemplate = (orderData) => {
 
           <!-- Items Table -->
           <tr>
-            <td class="content-cell" style="background-color: #ffffff; padding: 24px;">
-              <h3 style="color: #4a3728; font-size: 16px; font-weight: 600; margin: 0 0 14px; padding-bottom: 10px; border-bottom: 2px solid #8B6914;">🛒 Order Details</h3>
-              <table class="cart-table" width="100%" cellpadding="0" cellspacing="0">
-                <thead>
-                  <tr>
-                    <th style="padding: 10px 8px; text-align: left; color: #8B6914; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #f0e6d3;">#</th>
-                    <th style="padding: 10px 8px; text-align: left; color: #8B6914; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #f0e6d3;">Product</th>
-                    <th style="padding: 10px 8px; text-align: center; color: #8B6914; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #f0e6d3;">Size</th>
-                    <th style="padding: 10px 8px; text-align: center; color: #8B6914; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #f0e6d3;">Qty</th>
-                    <th style="padding: 10px 8px; text-align: right; color: #8B6914; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #f0e6d3;">Price</th>
-                    <th style="padding: 10px 8px; text-align: right; color: #8B6914; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #f0e6d3;">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${cartItemsRows}
-                </tbody>
-              </table>
+            <td class="content-cell" style="padding: 16px;">
+              <h3 style="color: #4a3728; font-size: 16px; font-weight: 600; margin: 0 0 12px; padding-bottom: 8px; border-bottom: 2px solid #8B6914;">🛒 Order Details</h3>
+              <div style="overflow-x: auto;">
+                <table class="cart-table" width="100%" cellpadding="0" cellspacing="0" style="min-width: 280px;">
+                  <thead>
+                    <tr>
+                      <th style="padding: 8px 4px; text-align: left; color: #8B6914; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #f0e6d3;">#</th>
+                      <th style="padding: 8px 4px; text-align: left; color: #8B6914; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #f0e6d3;">Product</th>
+                      <th style="padding: 8px 4px; text-align: center; color: #8B6914; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #f0e6d3;">Size</th>
+                      <th style="padding: 8px 4px; text-align: center; color: #8B6914; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #f0e6d3;">Qty</th>
+                      <th style="padding: 8px 4px; text-align: right; color: #8B6914; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #f0e6d3;">Price</th>
+                      <th style="padding: 8px 4px; text-align: right; color: #8B6914; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #f0e6d3;">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${cartItemsRows}
+                  </tbody>
+                </table>
+              </div>
 
               <!-- Totals -->
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 16px;">
                 <tr>
-                  <td style="padding: 6px 8px; color: #6b7280; font-size: 14px;">Subtotal</td>
-                  <td style="padding: 6px 8px; color: #4a3728; font-size: 14px; text-align: right;">₹${subtotal}</td>
+                  <td style="padding: 4px 8px; color: #6b7280; font-size: 13px;">Subtotal</td>
+                  <td style="padding: 4px 8px; color: #4a3728; font-size: 13px; text-align: right;">₹${subtotal}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 6px 8px; color: #6b7280; font-size: 14px;">Shipping</td>
-                  <td style="padding: 6px 8px; color: #22c55e; font-size: 14px; text-align: right; font-weight: 600;">FREE</td>
+                  <td style="padding: 4px 8px; color: #6b7280; font-size: 13px;">Shipping</td>
+                  <td style="padding: 4px 8px; color: #22c55e; font-size: 13px; text-align: right; font-weight: 600;">FREE</td>
                 </tr>
-                ${
-                  discount > 0
-                    ? `<tr>
-                  <td style="padding: 6px 8px; color: #6b7280; font-size: 14px;">Discount ${coupon_code ? `(${coupon_code})` : ""}</td>
-                  <td style="padding: 6px 8px; color: #22c55e; font-size: 14px; text-align: right; font-weight: 600;">-₹${discount}</td>
+                ${discount > 0
+      ? `<tr>
+                  <td style="padding: 4px 8px; color: #6b7280; font-size: 13px;">Discount ${coupon_code ? `(${coupon_code})` : ""}</td>
+                  <td style="padding: 4px 8px; color: #22c55e; font-size: 13px; text-align: right; font-weight: 600;">-₹${discount}</td>
                 </tr>`
-                    : ""
-                }
+      : ""
+    }
                 <tr>
                   <td colspan="2" style="padding: 0;"><hr style="border: none; border-top: 2px solid #8B6914; margin: 8px 0;" /></td>
                 </tr>
                 <tr>
-                  <td style="padding: 8px; color: #4a3728; font-size: 18px; font-weight: 700;">Total Paid</td>
-                  <td style="padding: 8px; color: #8B6914; font-size: 20px; font-weight: 700; text-align: right;">₹${total_amount}</td>
+                  <td style="padding: 8px; color: #4a3728; font-size: 16px; font-weight: 700;">Total Paid</td>
+                  <td style="padding: 8px; color: #8B6914; font-size: 18px; font-weight: 700; text-align: right;">₹${total_amount}</td>
                 </tr>
               </table>
             </td>
@@ -195,14 +213,14 @@ const orderConfirmationTemplate = (orderData) => {
 
           <!-- Delivery Address -->
           <tr>
-            <td style="background-color: #ffffff; padding: 0 24px 24px;">
-              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fef9ee; border-radius: 10px; border: 1px solid #f0e6d3; padding: 16px;">
+            <td style="padding: 0 16px 16px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fef9ee; border-radius: 8px; border: 1px solid #f0e6d3; padding: 12px;">
                 <tr>
-                  <td style="padding: 16px;">
-                    <h3 style="color: #4a3728; font-size: 15px; font-weight: 600; margin: 0 0 8px;">📦 Delivery Address</h3>
-                    <p style="color: #6b7280; font-size: 14px; margin: 0 0 4px;"><strong style="color: #4a3728;">${user_name}</strong></p>
-                    <p style="color: #6b7280; font-size: 14px; margin: 0 0 4px;">${fullAddress}</p>
-                    <p style="color: #6b7280; font-size: 14px; margin: 0;">📞 ${user_mobile_num} &nbsp;|&nbsp; ✉️ ${user_email}</p>
+                  <td style="padding: 12px;">
+                    <h3 style="color: #4a3728; font-size: 14px; font-weight: 600; margin: 0 0 6px;">📦 Delivery Address</h3>
+                    <p style="color: #6b7280; font-size: 13px; margin: 0 0 4px;"><strong style="color: #4a3728;">${user_name}</strong></p>
+                    <p style="color: #6b7280; font-size: 13px; margin: 0 0 4px; line-height: 1.4;">${fullAddress}</p>
+                    <p style="color: #6b7280; font-size: 13px; margin: 0;">📞 ${user_mobile_num} &nbsp;|&nbsp; ✉️ ${user_email}</p>
                   </td>
                 </tr>
               </table>
@@ -211,22 +229,28 @@ const orderConfirmationTemplate = (orderData) => {
 
           <!-- CTA Button -->
           <tr>
-            <td style="background-color: #ffffff; padding: 0 24px 32px; text-align: center;">
-              <a href="https://gauswarn.com/products" style="display: inline-block; background: linear-gradient(135deg, #8B6914, #a67c2e); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 600; letter-spacing: 0.5px;">Continue Shopping →</a>
+            <td style="padding: 8px 16px 24px; text-align: center;">
+              <table border="0" cellpadding="0" cellspacing="0" align="center" style="margin: 0 auto;">
+                <tr>
+                  <td align="center" style="background-color: #8B6914; border-radius: 6px;">
+                    <a href="https://gauswarn.com/products" target="_blank" style="display: inline-block; padding: 12px 24px; font-family: 'Poppins', sans-serif; font-size: 14px; color: #ffffff; text-decoration: none; font-weight: 600;">Continue Shopping →</a>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 
           <!-- Footer — Gauswarn Details -->
           <tr>
-            <td style="background: linear-gradient(135deg, #4a3728 0%, #5d4637 100%); border-radius: 0 0 16px 16px; padding: 28px 24px; text-align: center;">
-              <p style="color: #c4993d; font-size: 16px; font-weight: 700; margin: 0 0 12px; letter-spacing: 1px;">GAUSWARN</p>
-              <p style="color: #d4b896; font-size: 13px; margin: 0 0 6px;">📍 11, Sapna Sangeeta Rd, Manish Baag Colony,</p>
-              <p style="color: #d4b896; font-size: 13px; margin: 0 0 12px;">New Agrawal Nagar, Indore, Madhya Pradesh 452001</p>
-              <p style="color: #d4b896; font-size: 13px; margin: 0 0 6px;">📞 +91-96857-15905 &nbsp;|&nbsp; +91-74709-15905</p>
-              <p style="color: #d4b896; font-size: 13px; margin: 0 0 16px;">✉️ gauswarn@gmail.com &nbsp;|&nbsp; info@gauswarn.com</p>
-              <hr style="border: none; border-top: 1px solid #6b5a4a; margin: 0 0 16px;" />
+            <td style="background-color: #4a3728; padding: 24px 16px; text-align: center;">
+              <p style="color: #c4993d; font-size: 15px; font-weight: 700; margin: 0 0 8px; letter-spacing: 1px;">GAUSWARN</p>
+              <p style="color: #d4b896; font-size: 12px; margin: 0 0 4px; line-height: 1.4;">📍 11, Sapna Sangeeta Rd, Manish Baag Colony,</p>
+              <p style="color: #d4b896; font-size: 12px; margin: 0 0 8px; line-height: 1.4;">New Agrawal Nagar, Indore, Madhya Pradesh 452001</p>
+              <p style="color: #d4b896; font-size: 12px; margin: 0 0 4px;">📞 +91-96857-15905 &nbsp;|&nbsp; +91-74709-15905</p>
+              <p style="color: #d4b896; font-size: 12px; margin: 0 0 16px;">✉️ gauswarn@gmail.com &nbsp;|&nbsp; info@gauswarn.com</p>
+              <hr style="border: none; border-top: 1px solid #6b5a4a; margin: 0 0 12px;" />
               <p style="color: #9a8b7a; font-size: 11px; margin: 0;">© ${new Date().getFullYear()} Gauswarn India. All rights reserved.</p>
-              <p style="color: #9a8b7a; font-size: 11px; margin: 4px 0 0;">This is an automated order confirmation email.</p>
+              <p style="color: #9a8b7a; font-size: 10px; margin: 4px 0 0;">This is an automated order confirmation email.</p>
             </td>
           </tr>
 
