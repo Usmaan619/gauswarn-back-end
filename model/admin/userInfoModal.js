@@ -66,6 +66,7 @@ exports.getAllOrderDetails = async () => {
           STATUS,
           paymentDetails, 
           isPaymentPaid, 
+          cart_data,
           id, 
           DATE, 
           TIME 
@@ -91,4 +92,16 @@ exports.updateOrderStatus = async (id, status) => {
     await connection.execute(query, [status, id]);
     return true;
   });
+};
+
+exports.getOrderDetailsById = async (id) => {
+  try {
+    return await withConnection(async (connection) => {
+      const query = `SELECT * FROM gauswarn_payment WHERE user_id = ?`;
+      const [rows] = await connection.execute(query, [id]);
+      return rows[0];
+    });
+  } catch (error) {
+    throw error;
+  }
 };

@@ -85,6 +85,7 @@ router.delete("/deleteUser/:id", registerController.deleteUser);
 router.get("/getAllCustomer", userInfoController.getAllUserInfo);
 router.get("/getAllOrderDetails", userInfoController.getAllOrderDetails);
 router.post("/updateOrderStatus/:id", userInfoController.updateOrderStatus);
+router.get("/getInvoiceHtml/:id", userInfoController.getInvoiceHtml);
 
 router.post("/getAllSales", monthlyReportController.getAllSales);
 router.get("/dashboardCounts", dashboardController.getDashboardCounts);
